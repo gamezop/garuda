@@ -2,6 +2,8 @@
 # Garuda
 > ### A multiplayer game server framework for phoenix.
   > Build and run game servers intuitively.
+
+![Garuda CI](https://github.com/madclaws/garuda/workflows/Garuda%20CI/badge.svg)
   
 Garuda  is an Authoritative Multiplayer Game Server for phoenix framework.
 

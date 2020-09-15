@@ -2,6 +2,7 @@ defmodule Garuda.GameChannel do
   @moduledoc """
     Phoenix Channels abstractions, game specific behaviours and functions
   """
+  alias Garuda.RoomManager.Records
 
   @callback on_join(params :: map, socket :: Phoenix.Socket) :: any()
   @callback authorized?(params :: map()) :: boolean
@@ -39,7 +40,7 @@ defmodule Garuda.GameChannel do
       end
 
       def terminate(reason, socket) do
-        Garuda.RoomManager.RoomDb.on_channel_terminate(socket.channel_pid)
+        RoomDb.on_channel_terminate(socket.channel_pid)
         apply(__MODULE__, :on_leave, [reason, socket])
       end
     end
@@ -62,6 +63,6 @@ defmodule Garuda.GameChannel do
     Expects channel socket
   """
   def id(socket) do
-    Garuda.RoomManager.Records.via_tuple(socket.assigns.garuda_game_room_id)
+    Records.via_tuple(socket.assigns.garuda_game_room_id)
   end
 end

@@ -2,8 +2,8 @@ defmodule Garuda.GameManager do
   @moduledoc """
     Entry point supervisor of Garuda
   """
-  alias Garuda.RoomManager.RoomSupervisor
   alias Garuda.Matchmaker.MatchmakerSupervisor
+  alias Garuda.RoomManager.RoomSupervisor
 
   use Supervisor
 

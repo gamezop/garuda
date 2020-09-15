@@ -3,7 +3,6 @@ defmodule Garuda.RoomManager.RoomDb do
     Stores the info of all the game rooms and functions to manage those data.
   """
 
-  # TODO => Remove comments after testing.
   use GenServer
 
   def start_link(opts \\ []) do
@@ -56,7 +55,7 @@ defmodule Garuda.RoomManager.RoomDb do
   @doc """
     Returns Game server info, required for Monitoring
   """
-  def get_stats() do
+  def get_stats do
     GenServer.call(__MODULE__, :get_stats)
   end
 
