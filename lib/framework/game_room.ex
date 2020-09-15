@@ -3,6 +3,7 @@ defmodule Garuda.GameRoom do
     Behaviours and functions for implementing core game logic rooms
   """
   alias Garuda.RoomManager.RoomDb
+
   defmacro __using__(_opts \\ []) do
     quote do
       import unquote(__MODULE__)

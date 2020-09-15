@@ -17,6 +17,7 @@ defmodule Garuda.GameChannel do
       use Phoenix.Channel
       alias Garuda.RoomManager.RoomDb
       alias Garuda.RoomManager.RoomSheduler
+
       def join("room_" <> room_id, params, socket) do
         if apply(__MODULE__, :authorized?, [params]) do
           Process.send_after(self(), {"after_join", params}, 50)
