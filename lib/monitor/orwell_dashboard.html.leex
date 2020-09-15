@@ -1,0 +1,59 @@
+<nav class="navbar orwell-navbar">
+      <div class="navbar-brand">
+          <div class="navbar-item">
+              <p class="brand-text">Garuda</p>
+          </div>
+      </div>
+</nav>
+<nav class="level dashboard-nav">
+    <div class="level-item has-text-centered">
+        <div class="tags has-addons">
+            <span class="tag is-medium is-success">Connections</span>
+            <span class="tag is-medium is-dark"><%= @connections %></span>
+        </div>
+    </div>
+    <div class="level-item has-text-centered">
+        <div class="tags has-addons">
+            <span class="tag is-medium is-success">Rooms</span>
+            <span class="tag is-medium is-dark"><%= @num_rooms %></span>
+        </div>
+    </div>
+</nav>
+<div class="dashboard-content">
+        <div class="columns dashboard-head-columns">
+            <div class="column is-one-quarter dashboard-head-column">Room ID</div>
+            <div class="column is-one-quarter dashboard-head-column">Room Name</div>
+            <div class="column is-one-quarter dashboard-head-column">Time Elasped</div>
+            <div class="column is-one-quarter dashboard-head-column">Actions</div>
+        </div>
+    <%= for room <- @list_rooms do %>
+        <div class="columns dashboard-columns">
+            <div class="column is-one-quarter dashboard-column"><%= room["room_id"] %></div>
+            <div class="column is-one-quarter dashboard-column"><%= room["room_name"] %></div>
+            <div class="column is-one-quarter dashboard-column"><%= room["time"] %></div>
+            <div class="column is-one-quarter dashboard-column room-buttons">
+                <button class="button is-rounded is-primary"
+                    phx-click="inspect"
+                    phx-value-name="<%= room["room_name"] %>"
+                    phx-value-id="<%= room["room_id"] %>">
+                    Inspect
+                </button>
+                <button class="button is-rounded is-danger"
+                    phx-click="dispose"
+                    phx-value-name="<%= room["room_name"] %>"
+                    phx-value-id="<%= room["room_id"] %>">
+                    Dispose
+                </button>
+            </div>
+        </div>
+        <%= if @selected_room_id == room["room_id"] do %>
+        <div>
+            <pre class="pre-block">
+                <code class="code-block">
+                    <%= @room_state %>
+                </code>
+            </pre>
+        </div>
+        <% end %>
+    <% end %>
+</div>
