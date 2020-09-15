@@ -21,11 +21,6 @@ Garuda ships with a javascript client **garudajs**, which allows easy communicat
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-
-by adding `garuda` to your list of dependencies in `mix.exs`:
-  
-
 ```elixir
 
 def  deps  do
