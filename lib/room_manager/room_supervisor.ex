@@ -9,8 +9,8 @@ defmodule Garuda.RoomManager.RoomSupervisor do
   """
 
   use Supervisor
-  alias Garuda.RoomManager.RoomSheduler
   alias Garuda.RoomManager.RoomDb
+  alias Garuda.RoomManager.RoomSheduler
 
   @max_dynamic_supervisors 5
 
@@ -29,7 +29,7 @@ defmodule Garuda.RoomManager.RoomSupervisor do
   end
 
   # Creates dynamic supervisors according to the config
-  defp create_dynamic_supervisors() do
+  defp create_dynamic_supervisors do
     for count <- 1..@max_dynamic_supervisors do
       {DynamicSupervisor, strategy: :one_for_one, name: :"dynamic_sup_#{count}"}
     end

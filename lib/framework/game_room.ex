@@ -2,7 +2,7 @@ defmodule Garuda.GameRoom do
   @moduledoc """
     Behaviours and functions for implementing core game logic rooms
   """
-
+  alias Garuda.RoomManager.RoomDb
   defmacro __using__(_opts \\ []) do
     quote do
       import unquote(__MODULE__)
@@ -31,8 +31,8 @@ defmodule Garuda.GameRoom do
         {:stop, {:shutdown, "Disposing room"}, state}
       end
 
-      def get_channel() do
-        Garuda.RoomManager.RoomDb.get_channel_name(self())
+      def get_channel do
+        RoomDb.get_channel_name(self())
       end
     end
   end

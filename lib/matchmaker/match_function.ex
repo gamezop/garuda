@@ -58,7 +58,7 @@ defmodule Garuda.Matchmaker.MatchFunction do
 
   ################
 
-  defp create_ets() do
+  defp create_ets do
     :ets.new(:match_table, [:named_table])
     Logger.info("----ETS Created")
   end
@@ -257,7 +257,7 @@ defmodule Garuda.Matchmaker.MatchFunction do
 
   defp remove_player_entry(_player_map, _player_id, false), do: nil
 
-  defp getmap_players_in_lobby() do
+  defp getmap_players_in_lobby do
     case :ets.lookup(:match_table, "players") do
       [{_room_name_key, map_players_in_lobby}] ->
         map_players_in_lobby

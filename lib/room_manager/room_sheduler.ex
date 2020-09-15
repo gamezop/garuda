@@ -45,7 +45,6 @@ defmodule Garuda.RoomManager.RoomSheduler do
     {:reply, state, state}
   end
 
-  # TODO => Remove comments.
   @impl true
   def handle_info({:DOWN, ref, :process, object, reason}, state) do
     IO.puts("#{inspect(ref)}")
@@ -84,7 +83,7 @@ defmodule Garuda.RoomManager.RoomSheduler do
   # end
 
   # Creates an initial state for sheduler
-  defp generate_sheduler_state() do
+  defp generate_sheduler_state do
     %{
       # available for load-balancing next time.
       available_supervisors: [],
@@ -100,7 +99,7 @@ defmodule Garuda.RoomManager.RoomSheduler do
   # Filter out the other worker children from the children list of RoomSupervisor,
   # and returns on;y supervisors as list
 
-  defp get_supervisor_list() do
+  defp get_supervisor_list do
     Supervisor.which_children(Garuda.RoomManager.RoomSupervisor)
     |> Enum.filter(fn {_name, _pid, type, _module} -> type == :supervisor end)
     |> Enum.map(fn {name, _pid, _type, _module} -> name end)
@@ -137,8 +136,6 @@ defmodule Garuda.RoomManager.RoomSheduler do
   end
 
   # Creates the game room and add it to the supervisor.
-  # TODO => Remove the comments after testing.
-  # TODO => Has to revisit after doing the game room abstractions
   defp create_game_room(module, name, opts, state) do
     {supervisor, state} = get_available_supervisor(state)
     DynamicSupervisor.start_child(supervisor, {module, name: Records.via_tuple(name), opts: opts})

@@ -15,9 +15,9 @@ defmodule Garuda.Monitor.OrwellDashboard do
   use Phoenix.LiveView
   require Logger
   alias Garuda.Monitor.DashboardData
+  alias Garuda.RoomManager.Records
   alias Garuda.RoomManager.RoomDb
   alias Garuda.RoomManager.RoomSheduler
-  alias Garuda.RoomManager.Records
   @polling_interval 5_000
   @doc """
   The Mount function gathers information from Game Server and creates liveview template
