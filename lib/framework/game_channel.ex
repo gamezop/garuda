@@ -29,7 +29,8 @@ defmodule Garuda.GameChannel do
             socket.assigns.game_room_module,
             socket.assigns.garuda_game_room_id,
             game_room_id: socket.assigns.garuda_game_room_id
-            )
+          )
+
           apply(__MODULE__, :on_join, [params, socket])
           {:ok, socket}
         else
