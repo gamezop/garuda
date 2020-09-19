@@ -20,22 +20,32 @@ defmodule Garuda.GameChannel do
 
       def join("room_" <> room_id, params, socket) do
         if apply(__MODULE__, :authorized?, [params]) do
-          Process.send_after(self(), {"after_join", params}, 50)
+          # Process.send_after(self(), {"after_join", params}, 50)
           RoomDb.on_channel_connection(socket.channel_pid, %{})
-          {:ok, apply(unquote(__MODULE__), :setup_socket_state, [room_id, socket])}
+
+          socket = apply(unquote(__MODULE__), :setup_socket_state, [room_id, socket])
+
+          RoomSheduler.create_room(
+            socket.assigns.game_room_module,
+            socket.assigns.garuda_game_room_id,
+            game_room_id: socket.assigns.garuda_game_room_id
+          )
+
+          apply(__MODULE__, :on_join, [params, socket])
+          {:ok, socket}
         else
           {:error, %{reason: "unauthorized"}}
         end
       end
 
       def handle_info({"after_join", params}, socket) do
-        RoomSheduler.create_room(
-          socket.assigns.game_room_module,
-          socket.assigns.garuda_game_room_id,
-          game_room_id: socket.assigns.garuda_game_room_id
-        )
+        # RoomSheduler.create_room(
+        #   socket.assigns.game_room_module,
+        #   socket.assigns.garuda_game_room_id,
+        #   game_room_id: socket.assigns.garuda_game_room_id
+        # )
 
-        apply(__MODULE__, :on_join, [params, socket])
+        # apply(__MODULE__, :on_join, [params, socket])
         {:noreply, socket}
       end
 
