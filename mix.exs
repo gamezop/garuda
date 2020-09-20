@@ -8,7 +8,11 @@ defmodule Garuda.MixProject do
       elixir: "~> 1.10",
       compilers: [:phoenix] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      docs: docs(),
+      description: """
+        A multiplayer game server framework for phoenix.
+      """
     ]
   end
 
@@ -16,6 +20,23 @@ defmodule Garuda.MixProject do
   def application do
     [
       extra_applications: [:logger]
+    ]
+  end
+
+  defp docs do
+    [
+      groups_for_modules: groups_for_modules()
+    ]
+  end
+
+  defp groups_for_modules do
+    [
+      Frameworks: [
+        Garuda.GameSocket,
+        Garuda.GameChannel,
+        Garuda.GameRoom
+      ],
+      MatchMaker: []
     ]
   end
 
