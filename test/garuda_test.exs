@@ -1,8 +1,5 @@
 defmodule GarudaTest do
+  @moduledoc false
   use ExUnit.Case
   doctest Garuda
-
-  test "greets the world" do
-    assert Garuda.hello() == :world
-  end
 end

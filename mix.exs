@@ -1,4 +1,5 @@
 defmodule Garuda.MixProject do
+  @moduledoc false
   use Mix.Project
 
   def project do
@@ -10,6 +11,7 @@ defmodule Garuda.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: docs(),
+      name: "Garuda",
       description: """
         A multiplayer game server framework for phoenix.
       """
@@ -25,6 +27,7 @@ defmodule Garuda.MixProject do
 
   defp docs do
     [
+      logo: "logo.png",
       groups_for_modules: groups_for_modules()
     ]
   end
@@ -36,7 +39,12 @@ defmodule Garuda.MixProject do
         Garuda.GameChannel,
         Garuda.GameRoom
       ],
-      MatchMaker: []
+      RoomManager: [
+        Garuda.RoomManager.RoomSheduler,
+        Garuda.RoomManager,
+        Garuda.RoomManager.RoomDb,
+        Garuda.RoomManager.Records
+      ]
     ]
   end
 
