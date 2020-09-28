@@ -15,7 +15,6 @@ defmodule Garuda.Monitor.OrwellDashboard do
   use Phoenix.LiveView
   require Logger
   alias Garuda.Monitor.DashboardData
-  alias Garuda.RoomManager.Records
   alias Garuda.RoomManager.RoomDb
   alias Garuda.RoomManager.RoomSheduler
   @polling_interval 5_000
@@ -86,7 +85,7 @@ defmodule Garuda.Monitor.OrwellDashboard do
     Logger.info("dispose room ..... #{inspect(params["name"])}:#{inspect(params["id"])}")
     # Logger.info "to be done...."
     game_room_id = params["name"] <> ":" <> params["id"]
-    RoomSheduler.dispose_room(Records.via_tuple(game_room_id))
+    RoomSheduler.dispose_room(game_room_id)
     {:noreply, socket}
   end
 
@@ -142,6 +141,8 @@ defmodule Garuda.Monitor.OrwellDashboard do
 
   defp assign_room_state(name, id, soc) do
     game_room_id = name <> ":" <> id
+    # BREAKING => DashboardData.get_room_state(game_room_id) deprecated,
+    # use RoomDb.get_room_state()
     assign(soc, :room_state, DashboardData.get_room_state(game_room_id) |> state_to_string)
   end
 

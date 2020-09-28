@@ -1,62 +1,93 @@
 defmodule Garuda.RoomManager.RoomDb do
   @moduledoc """
-    Stores the info of all the game rooms and functions to manage those data.
-  """
+  Stores the info of all the game-rooms and functions to manage those data.
 
+  Orwell uses data from RoomDb, for rendering the live interactive dashboard
+  """
+  alias Garuda.RoomManager.Records
   use GenServer
 
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
+  @spec save_room_state(pid(), map()) :: :ok
   @doc """
-    Saves the specific game room info with its pid as key
+  Saves the specific game-room info with its pid as key
 
-    Expects game room's pid and game room's info
+    * `room_pid` - pid of the particular game-room
+    * `info` - A map of game-room info
   """
   def save_room_state(room_pid, info) do
     GenServer.cast(__MODULE__, {:save_room, {room_pid, info}})
   end
 
-  def update_room_state(room_pid) do
-    GenServer.cast(__MODULE__, {:update_room, room_pid})
+  # TODO => Have to do this, and integrate with game_room module.
+  @doc """
+  Updates a game-room's info.
+
+  Use cases are usually to update the live info regarding the no:of
+  players in a game-room.
+  """
+  @spec update_room_state(pid(), map()) :: :ok
+  def update_room_state(room_pid, update_info) do
+    GenServer.cast(__MODULE__, {:update_room, room_pid, update_info})
   end
 
+  @doc """
+  Returns the game-channel name associated with the game-room's pid.
+
+  This function is mostly used by game-rooms to send messages to their
+  corresponding game-channels.
+  """
+  @spec get_channel_name(pid()) :: String.t()
   def get_channel_name(pid) do
     GenServer.call(__MODULE__, {:get_channel_name, pid})
   end
 
+  @spec delete_room(pid()) :: :ok
   @doc """
-    Deletes a game room info
-
-    Expects pid of the game room
+  Deletes a game-room info with a pid.
   """
   def delete_room(room_pid) do
     GenServer.cast(__MODULE__, {:delete_room, room_pid})
   end
 
+  @spec on_channel_connection(pid(), map()) :: :ok
   @doc """
-    Saves the specific game channel info with its pid as key
-    Expects game channel's pid and info
+  Saves the game-channel info with its pid as key.
+
+  As of now this is mainly used for getting the actual no:of connections on the server.
   """
   def on_channel_connection(channel_pid, info) do
     GenServer.cast(__MODULE__, {:channel_conn, {channel_pid, info}})
   end
 
+  @spec on_channel_terminate(pid()) :: :ok
   @doc """
-    Deletes a game channel's info
-
-    Expects pid of the game channel
+  Deletes a game-channel's info with give channel pid
   """
   def on_channel_terminate(channel_pid) do
-    GenServer.cast(__MODULE__, {:channel_discon, channel_pid})
+    GenServer.cast(__MODULE__, {:channel_disconn, channel_pid})
   end
 
+  @spec get_stats :: map()
   @doc """
-    Returns Game server info, required for Monitoring
+    Returns overall game server info, required for Monitoring
   """
   def get_stats do
     GenServer.call(__MODULE__, :get_stats)
+  end
+
+
+  @spec get_room_state(String.t()) :: map()
+  @doc """
+  Returns the state of a given `game_room_id`
+
+    * `game_room_id` - Unique combination of room_name + ":" + room_id., ex ("tictactoe:ACFBEBW")
+  """
+  def get_room_state(game_room_id) do
+    GenServer.call(__MODULE__, {:get_room_state, game_room_id})
   end
 
   @impl true
@@ -78,14 +109,12 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @impl true
   def handle_cast({:channel_conn, {channel_pid, _info}}, state) do
-    IO.puts("on channel conn #{inspect(channel_pid)}")
     state = put_in(state["conn"][channel_pid], %{})
     {:noreply, state}
   end
 
   @impl true
-  def handle_cast({:channel_discon, channel_pid}, state) do
-    IO.puts("on channel disconn #{inspect(channel_pid)}")
+  def handle_cast({:channel_disconn, channel_pid}, state) do
     {_popped_val, state} = pop_in(state["conn"][channel_pid])
     {:noreply, state}
   end
@@ -106,5 +135,14 @@ defmodule Garuda.RoomManager.RoomDb do
     room_name = state["rooms"][room_pid]["room_name"]
     room_id = state["rooms"][room_pid]["room_id"]
     {:reply, "room_" <> room_name <> ":" <> room_id, state}
+  end
+
+  @impl true
+  def handle_call({:get_room_state, game_room_id}, _from, state) do
+    room_state = case Records.is_process_registered(game_room_id) do
+      true -> :sys.get_state(Records.via_tuple(game_room_id))
+      false -> %{}
+    end
+    {:reply, room_state, state}
   end
 end
