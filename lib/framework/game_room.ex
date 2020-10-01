@@ -17,6 +17,7 @@ defmodule Garuda.GameRoom do
         case result do
           {:ok, child} ->
             send(Garuda.RoomManager.RoomSheduler, {:room_started, child, opts})
+
           # {:error, {:already_started, child}} -> Process.send_after(Garuda.RoomManager.RoomSheduler, {
           # :room_join, child, opts})
           {:error, error} ->

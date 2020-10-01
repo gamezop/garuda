@@ -48,9 +48,10 @@ defmodule Garuda.GameChannel do
 
           [room_name, match_id] = String.split(room_id, ":")
 
-          socket = Phoenix.Socket.assign(socket, :garuda_room_name, room_name)
-          |> Phoenix.Socket.assign(:garuda_match_id, match_id)
-          |> Phoenix.Socket.assign(:garuda_game_room_id, room_id)
+          socket =
+            Phoenix.Socket.assign(socket, :garuda_room_name, room_name)
+            |> Phoenix.Socket.assign(:garuda_match_id, match_id)
+            |> Phoenix.Socket.assign(:garuda_game_room_id, room_id)
 
           RoomSheduler.create_room(
             socket.assigns.game_room_module,

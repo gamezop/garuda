@@ -79,7 +79,6 @@ defmodule Garuda.RoomManager.RoomDb do
     GenServer.call(__MODULE__, :get_stats)
   end
 
-
   @spec get_room_state(String.t()) :: map()
   @doc """
   Returns the state of a given `game_room_id`
@@ -139,10 +138,12 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @impl true
   def handle_call({:get_room_state, game_room_id}, _from, state) do
-    room_state = case Records.is_process_registered(game_room_id) do
-      true -> :sys.get_state(Records.via_tuple(game_room_id))
-      false -> %{}
-    end
+    room_state =
+      case Records.is_process_registered(game_room_id) do
+        true -> :sys.get_state(Records.via_tuple(game_room_id))
+        false -> %{}
+      end
+
     {:reply, room_state, state}
   end
 end

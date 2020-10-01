@@ -5,6 +5,7 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
   alias Garuda.RoomManager.RoomDb
   alias Garuda.RoomManager.Records
   alias GarudaTest.RoomManager.TestGenserver
+
   setup do
     {:ok, pid} = RoomDb.start_link()
     {:ok, test_pid} = TestGenserver.start_link()
@@ -12,8 +13,7 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
   end
 
   test "initial state to room db", context do
-    assert :sys.get_state(context[:pid]) === %{"conn" =>
-    %{}, "rooms" => %{}}
+    assert :sys.get_state(context[:pid]) === %{"conn" => %{}, "rooms" => %{}}
   end
 
   test " save room state ", context do
@@ -23,8 +23,9 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "room_id" => "test_id",
       "time" => :os.system_time(:milli_seconds)
     })
-    assert :sys.get_state(context[:pid])["rooms"][context[:tpid]]["room_id"]
-      ===  "test_id"
+
+    assert :sys.get_state(context[:pid])["rooms"][context[:tpid]]["room_id"] ===
+             "test_id"
   end
 
   test "delete room state", context do
@@ -34,9 +35,11 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "room_id" => "test_id",
       "time" => :os.system_time(:milli_seconds)
     })
+
     RoomDb.delete_room(context[:tpid])
-    assert :sys.get_state(context[:pid])["rooms"][context[:tpid]]
-      ===  nil
+
+    assert :sys.get_state(context[:pid])["rooms"][context[:tpid]] ===
+             nil
   end
 
   test "new channel connection", context do
@@ -57,9 +60,11 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "room_id" => "test_id",
       "time" => :os.system_time(:milli_seconds)
     })
+
     RoomDb.on_channel_connection(context[:tpid], %{})
-    assert %{"num_conns" => _conns_info, "num_rooms" => _rooms_info,
-    "rooms" => _room_info} = RoomDb.get_stats()
+
+    assert %{"num_conns" => _conns_info, "num_rooms" => _rooms_info, "rooms" => _room_info} =
+             RoomDb.get_stats()
   end
 
   test "get channel name", context do
@@ -69,13 +74,14 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "room_id" => "test_id",
       "time" => :os.system_time(:milli_seconds)
     })
+
     assert RoomDb.get_channel_name(context[:tpid]) === "room_test_room:test_id"
   end
 
   test "get game-room state", _context do
     start_supervised({Registry, keys: :unique, name: GarudaRegistry})
     name = Records.via_tuple("test_room")
-    {:ok, _test_pid2} = TestGenserver.start_link([name: name])
+    {:ok, _test_pid2} = TestGenserver.start_link(name: name)
     assert %{} === RoomDb.get_room_state(name)
   end
 end
