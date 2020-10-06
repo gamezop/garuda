@@ -22,7 +22,6 @@ defmodule Garuda.RoomManager.RoomDb do
     GenServer.cast(__MODULE__, {:save_room, {room_pid, info}})
   end
 
-  # TODO => Have to do this, and integrate with game_room module.
   @doc """
   Updates a game-room's info.
 

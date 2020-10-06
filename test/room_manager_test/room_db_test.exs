@@ -2,8 +2,8 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
   @moduledoc false
   use ExUnit.Case
 
-  alias Garuda.RoomManager.RoomDb
   alias Garuda.RoomManager.Records
+  alias Garuda.RoomManager.RoomDb
   alias GarudaTest.RoomManager.TestGenserver
 
   setup do

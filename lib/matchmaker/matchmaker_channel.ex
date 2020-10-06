@@ -23,7 +23,7 @@ defmodule Garuda.Matchmaker.MatchmakerChannel do
   """
   def join("garuda_matchmaker:" <> _room_id, player_details, socket) do
     player_details = Map.put(player_details, "pid", self())
-    socket = assign(socket, :player_id, player_details["player_id"])
+    IO.puts("SOCKET ASSIGNS  =>  #{inspect(socket.assigns)}")
     MatchFunction.send_to_queue(player_details)
     {:ok, socket}
   end

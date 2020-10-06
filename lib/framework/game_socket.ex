@@ -29,6 +29,11 @@ defmodule Garuda.GameSocket do
       import unquote(__MODULE__)
       use Phoenix.Socket
       Phoenix.Socket.channel("garuda_matchmaker:*", Garuda.Matchmaker.MatchmakerChannel)
+
+      def connect(params, socket, _connect_info) do
+        IO.puts("#{inspect(params)}")
+        {:ok, assign(socket, :player_id, params["playerId"])}
+      end
     end
   end
 
@@ -44,7 +49,7 @@ defmodule Garuda.GameSocket do
   defmacro game_channel(channel_name, channel_module, game_room_module) do
     quote do
       Phoenix.Socket.channel("room_" <> unquote(channel_name) <> ":*", unquote(channel_module),
-        assigns: %{game_room_module: unquote(game_room_module)}
+        assigns: %{"#{unquote(channel_name)}_room_module" => unquote(game_room_module)}
       )
     end
   end

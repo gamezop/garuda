@@ -34,11 +34,12 @@ defmodule Garuda.GameChannel do
               reason :: :normal | :shutdown | {:shutdown, :left | :closed | term()},
               socket :: Phoenix.Socket
             ) :: any()
-  defmacro __using__(_opts \\ []) do
+  defmacro __using__(opts \\ []) do
     quote do
       @behaviour unquote(__MODULE__)
       import unquote(__MODULE__)
       use Phoenix.Channel
+      require Logger
       alias Garuda.RoomManager.RoomDb
       alias Garuda.RoomManager.RoomSheduler
 
@@ -48,26 +49,30 @@ defmodule Garuda.GameChannel do
 
           [room_name, match_id] = String.split(room_id, ":")
 
-          socket =
-            Phoenix.Socket.assign(socket, :garuda_room_name, room_name)
-            |> Phoenix.Socket.assign(:garuda_match_id, match_id)
-            |> Phoenix.Socket.assign(:garuda_game_room_id, room_id)
+          if Keyword.get(unquote(opts), :log) do
+            Logger.metadata(match_id: match_id)
+          end
 
-          RoomSheduler.create_room(
-            socket.assigns.game_room_module,
-            socket.assigns.garuda_game_room_id,
-            game_room_id: socket.assigns.garuda_game_room_id
+          RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
+            game_room_id: room_id
           )
 
-          apply(__MODULE__, :on_join, [params, socket])
+          Process.send_after(self(), {"garuda_on_join", params, socket}, 10)
+
           {:ok, socket}
         else
           {:error, %{reason: "unauthorized"}}
         end
       end
 
+      def handle_info({"garuda_on_join", params, socket}, state) do
+        apply(__MODULE__, :on_join, [params, socket])
+        {:noreply, state}
+      end
+
       def terminate(reason, socket) do
         RoomDb.on_channel_terminate(socket.channel_pid)
+        apply(socket.assigns["#{room_name}_room_module"], :on_leave, [reason])
         apply(__MODULE__, :on_leave, [reason, socket])
       end
     end
@@ -78,6 +83,7 @@ defmodule Garuda.GameChannel do
     * socket - socket state of game-channel
   """
   def id(socket) do
-    Records.via_tuple(socket.assigns.garuda_game_room_id)
+    [_namespace, game_room_id] = String.split(socket.topic, "_")
+    Records.via_tuple(game_room_id)
   end
 end
