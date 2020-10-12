@@ -145,4 +145,23 @@ defmodule Garuda.RoomManager.RoomDb do
 
     {:reply, room_state, state}
   end
+
+  @impl true
+  def handle_info({:room_join, room_pid, opts}, state) do
+    player_id = Keyword.get(opts, :player_id)
+    state = put_in(state["rooms"][room_pid]["players"][player_id], true)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:room_left, room_pid, player_id}, state) do
+    {_popped_val, state} = pop_in(state["rooms"][room_pid]["players"][player_id])
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:room_terminated, room_pid}, state) do
+    {_popped_val, state} = pop_in(state["rooms"][room_pid])
+    {:noreply, state}
+  end
 end
