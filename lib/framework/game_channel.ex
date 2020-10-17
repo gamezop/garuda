@@ -58,7 +58,7 @@ defmodule Garuda.GameChannel do
             player_id: socket.assigns.player_id
           )
 
-          Process.send_after(self(), {"garuda_on_join", params, socket}, 10)
+          send(self(), {"garuda_on_join", params, socket})
 
           {:ok, socket}
         else
