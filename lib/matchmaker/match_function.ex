@@ -19,6 +19,10 @@ defmodule Garuda.Matchmaker.MatchFunction do
     GenServer.cast(__MODULE__, {"remove_player", player_id})
   end
 
+  def room_open(room_id) do
+    GenServer.call(__MODULE__, {"room_open", room_id})
+  end
+
   #################
 
   @impl true
@@ -26,6 +30,13 @@ defmodule Garuda.Matchmaker.MatchFunction do
     Logger.info("----...MatchMaker Started...")
     create_ets()
     {:ok, []}
+  end
+
+  @impl true
+  def handle_call({"room_open", room_id}, _from, state) do
+    Logger.info("----sending to  queue")
+    is_room_open = room_id |> is_room_open?()
+    {:reply, is_room_open, state}
   end
 
   @impl true
@@ -61,6 +72,15 @@ defmodule Garuda.Matchmaker.MatchFunction do
   defp create_ets do
     :ets.new(:match_table, [:named_table])
     Logger.info("----ETS Created")
+  end
+
+  defp is_room_open?(room_name) do
+    room_population = room_name |> getmap_players_in_room()
+
+    case room_population do
+      [] -> false
+      _ -> true
+    end
   end
 
   ## handling entry into game_room row in ets

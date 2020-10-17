@@ -31,7 +31,7 @@ defmodule Garuda.GameSocket do
       Phoenix.Socket.channel("garuda_matchmaker:*", Garuda.Matchmaker.MatchmakerChannel)
 
       def connect(params, socket, _connect_info) do
-        IO.puts("#{inspect(params)}")
+        IO.puts("connect params - #{inspect(params)}")
         {:ok, assign(socket, :player_id, params["playerId"])}
       end
     end

@@ -72,7 +72,7 @@ defmodule Garuda.GameChannel do
 
       def terminate(reason, socket) do
         RoomDb.on_channel_terminate(socket.channel_pid)
-        apply(socket.assigns["#{room_name}_room_module"], :on_leave, [reason])
+        # apply(socket.assigns["#{room_name}_room_module"], :on_leave, [reason])
         apply(__MODULE__, :on_leave, [reason, socket])
       end
     end
