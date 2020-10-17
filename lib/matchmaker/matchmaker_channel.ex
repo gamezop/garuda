@@ -73,30 +73,26 @@ defmodule Garuda.Matchmaker.MatchmakerChannel do
     handle_matchmaking_mode(player_details, player_details["mode"])
   end
 
-  defp handle_matchmaking_mode(player_details, m_DEFAULT()) do
+  defp handle_matchmaking_mode(player_details, m_default()) do
     MatchFunction.send_to_queue(player_details)
     {:ok, "player_added"}
   end
 
-  defp handle_matchmaking_mode(player_details, m_CREATE()) do
-    cond do
-      not MatchFunction.room_open(player_details["room_name"]) ->
-        MatchFunction.send_to_queue(player_details)
-        {:ok, "room opened"}
-
-      true ->
-        {:error, "room busy"}
+  defp handle_matchmaking_mode(player_details, m_create()) do
+    if not MatchFunction.room_open(player_details["room_name"]) do
+      MatchFunction.send_to_queue(player_details)
+      {:ok, "room opened"}
+    else
+      {:error, "room busy"}
     end
   end
 
-  defp handle_matchmaking_mode(player_details, m_JOIN()) do
-    cond do
-      MatchFunction.room_open(player_details["room_name"]) ->
-        MatchFunction.send_to_queue(player_details)
-        {:ok, "joined room"}
-
-      true ->
-        {:error, "room not present"}
+  defp handle_matchmaking_mode(player_details, m_join()) do
+    if MatchFunction.room_open(player_details["room_name"]) do
+      MatchFunction.send_to_queue(player_details)
+      {:ok, "joined room"}
+    else
+      {:error, "room not present"}
     end
   end
 end

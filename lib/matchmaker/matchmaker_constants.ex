@@ -1,13 +1,16 @@
 defmodule Garuda.Matchmaker.MatchmakerConstants do
-  defmacro m_DEFAULT do
+  @moduledoc """
+  This is the match maker constants module.
+  """
+  defmacro m_default do
     quote do: "default"
   end
 
-  defmacro m_CREATE do
+  defmacro m_create do
     quote do: "create"
   end
 
-  defmacro m_JOIN do
+  defmacro m_join do
     quote do: "join"
   end
 end
