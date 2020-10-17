@@ -79,11 +79,11 @@ defmodule Garuda.Matchmaker.MatchmakerChannel do
   end
 
   defp handle_matchmaking_mode(player_details, m_create()) do
-    if not MatchFunction.room_open(player_details["room_name"]) do
+    if MatchFunction.room_open(player_details["room_name"]) do
+      {:error, "room busy"}
+    else
       MatchFunction.send_to_queue(player_details)
       {:ok, "room opened"}
-    else
-      {:error, "room busy"}
     end
   end
 
