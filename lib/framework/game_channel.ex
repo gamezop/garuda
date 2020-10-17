@@ -54,7 +54,8 @@ defmodule Garuda.GameChannel do
           end
 
           RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
-            game_room_id: room_id
+            game_room_id: room_id,
+            player_id: socket.assigns.player_id
           )
 
           Process.send_after(self(), {"garuda_on_join", params, socket}, 10)
@@ -72,7 +73,9 @@ defmodule Garuda.GameChannel do
 
       def terminate(reason, socket) do
         RoomDb.on_channel_terminate(socket.channel_pid)
-        # apply(socket.assigns["#{room_name}_room_module"], :on_leave, [reason])
+        if Records.is_process_registered(get_game_room_id(socket)) do
+          GenServer.cast(id(socket), {"on_channel_leave", socket.assigns.player_id, reason})
+        end
         apply(__MODULE__, :on_leave, [reason, socket])
       end
     end
@@ -85,5 +88,26 @@ defmodule Garuda.GameChannel do
   def id(socket) do
     [_namespace, game_room_id] = String.split(socket.topic, "_")
     Records.via_tuple(game_room_id)
+  end
+
+  @doc """
+  Returns the internal id of game-room
+    * socket - socket state of game-channel
+  """
+  @spec get_game_room_id(map()) :: String.t()
+  def get_game_room_id(socket) do
+    [_namespace, game_room_id] = String.split(socket.topic, "_")
+    game_room_id
+  end
+
+  @doc """
+  Returns the room name of game-room
+    * socket - socket state of game-channel
+  """
+  @spec get_room_name(map()) :: String.t()
+  def get_room_name(socket) do
+    [_namespace, game_room_id] = String.split(socket.topic, "_")
+    [room_name, _match_id] = String.split(game_room_id, ":")
+    room_name
   end
 end

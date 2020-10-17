@@ -81,8 +81,9 @@ defmodule Garuda.RoomManager.RoomSheduler do
   def handle_info({:room_started, pid, opts}, state) do
     # Handles the creation of a game room
     game_room_id = Keyword.get(opts, :game_room_id)
+    player_id = Keyword.get(opts, :player_id)
     [room_name, room_id] = String.split(game_room_id, ":")
-    add_room_to_state(pid, room_name, room_id)
+    add_room_to_state(pid, room_name, room_id, player_id)
     {:noreply, state}
   end
 
@@ -145,13 +146,14 @@ defmodule Garuda.RoomManager.RoomSheduler do
   end
 
   # Monitors the game room and send the room-state to RoomDb.
-  defp add_room_to_state(room_pid, room_name, room_id) do
+  defp add_room_to_state(room_pid, room_name, room_id, player_id) do
     ref = Process.monitor(room_pid)
 
     RoomDb.save_room_state(room_pid, %{
       "ref" => ref,
       "room_name" => room_name,
       "room_id" => room_id,
+      "players" => %{player_id => true},
       "time" => :os.system_time(:milli_seconds)
     })
   end
