@@ -1,7 +1,7 @@
 defmodule Garuda.Matchmaker.MatchmakerChannel do
   use Phoenix.Channel
   require Logger
-  alias Garuda.Matchmaker.MatchFunction
+  alias Garuda.Matchmaker.MatchmakerFunction
   import Garuda.Matchmaker.MatchmakerConstants
 
   @moduledoc """
@@ -23,6 +23,7 @@ defmodule Garuda.Matchmaker.MatchmakerChannel do
   """
   def join("garuda_matchmaker:" <> _room_id, player_details, socket) do
     with player_details <- add_pid(player_details),
+         player_details <- add_player_id(player_details, socket),
          {:ok, reply} <- handle_matchmaking_mode(player_details) do
       IO.puts("MATCHMAKING REPLY  =>  #{inspect(reply)}")
       {:ok, socket}
@@ -31,6 +32,11 @@ defmodule Garuda.Matchmaker.MatchmakerChannel do
         IO.puts("MATCHMAKING REPLY  =>  #{inspect(reply)}")
         {:error, %{reason: reply}}
     end
+  end
+
+  def handle_in("get_open_rooms", message, socket) do
+    send_open_game_rooms_list(message["room_name"], socket)
+    {:noreply, socket}
   end
 
   def handle_info({"match_maker_result", match_details}, socket) do
@@ -62,34 +68,43 @@ defmodule Garuda.Matchmaker.MatchmakerChannel do
     end)
   end
 
+  defp send_open_game_rooms_list(room_name, socket) do
+    game_rooms = MatchmakerFunction.game_rooms(room_name)
+    IO.puts("game rooms #{inspect(game_rooms)}")
+    push(socket, "open_rooms", game_rooms)
+  end
+
   defp handle_on_terminate(socket) do
     Logger.info("----terminating channel")
-    MatchFunction.remove_player(socket.assigns.player_id)
+    MatchmakerFunction.remove_player(socket.assigns.player_id)
   end
 
   defp add_pid(player_details), do: Map.put(player_details, "pid", self())
+
+  defp add_player_id(player_details, socket),
+    do: Map.put(player_details, "player_id", socket.assigns.player_id)
 
   defp handle_matchmaking_mode(player_details) do
     handle_matchmaking_mode(player_details, player_details["mode"])
   end
 
   defp handle_matchmaking_mode(player_details, m_default()) do
-    MatchFunction.send_to_queue(player_details)
+    MatchmakerFunction.send_to_queue(player_details)
     {:ok, "player_added"}
   end
 
   defp handle_matchmaking_mode(player_details, m_create()) do
-    if MatchFunction.room_open(player_details["room_name"]) do
+    if MatchmakerFunction.room_open?(player_details["room_name"]) do
       {:error, "room busy"}
     else
-      MatchFunction.send_to_queue(player_details)
+      MatchmakerFunction.send_to_queue(player_details)
       {:ok, "room opened"}
     end
   end
 
   defp handle_matchmaking_mode(player_details, m_join()) do
-    if MatchFunction.room_open(player_details["room_name"]) do
-      MatchFunction.send_to_queue(player_details)
+    if MatchmakerFunction.room_open?(player_details["room_name"]) do
+      MatchmakerFunction.send_to_queue(player_details)
       {:ok, "joined room"}
     else
       {:error, "room not present"}

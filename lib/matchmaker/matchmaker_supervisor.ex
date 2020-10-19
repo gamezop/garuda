@@ -9,7 +9,7 @@ defmodule Garuda.Matchmaker.MatchmakerSupervisor do
   """
 
   use Supervisor
-  alias Garuda.Matchmaker.MatchFunction
+  alias Garuda.Matchmaker.MatchmakerFunction
 
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
@@ -18,7 +18,7 @@ defmodule Garuda.Matchmaker.MatchmakerSupervisor do
   @impl true
   def init(_opts) do
     children = [
-      MatchFunction
+      MatchmakerFunction
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
