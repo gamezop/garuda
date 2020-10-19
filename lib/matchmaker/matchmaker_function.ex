@@ -317,7 +317,7 @@ defmodule Garuda.Matchmaker.MatchmakerFunction do
   # called when sufficient players are got to be matched
   # a match_id is generated
   # match details is broadcasted to all players in players list
-  # all players in players list are removed from the "players" key from ets that is kept for keeping player_id-game_room map
+  # all players removed from the "players" key from ets that is kept for keeping player_id-game_room map
   defp make_match(_game_room, player_id_list, match_id) do
     match_id =
       case match_id do
