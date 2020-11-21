@@ -1,58 +1,58 @@
 defmodule Garuda.Matchmaker.MatchmakerFunction do
   @moduledoc """
-    Manages the queuing system and state management of matchmaker
+  Manages the queuing system and state management of matchmaker
 
-    ## Match Making
-      For matchmaking we are maintaining a queue with ets. There are 2 categories of queue
-      - room collection
-      - player collection
+  ## Match Making
+    For matchmaking we are maintaining a queue with ets. There are 2 categories of queue
+    - room collection
+    - player collection
 
-      In room collection, we have room_name from client as key of ets entry and a map of player_id to match_id as value
-      key -> room_name; value -> %{"some_player_id" => %{"match_id" => "some_match_id"}}
+    In room collection, we have room_name from client as key of ets entry and a map of player_id to match_id as value
+      [{room_name, %{"some_player_id" => %{"match_id" => "some_match_id"}}}]
 
-      In player collection, we have "players" as key of ets entry and a map of player_id to {room_name, channel_pid} as value
-      key -> "players"; value -> %{"some_player_id" => {"some_game_room", channel_pid}}
+    In player collection, we have "players" as key of ets entry and a map of player_id to {room_name, channel_pid} as value
+      [{"players", %{"some_player_id" => {"some_game_room", channel_pid}}}]
 
-      room_name format
-      - default mode -> "garuda_matchmaking:{match_id} // "":{game_room}:{max_players}"
-      - create/join mode -> "garuda_matchmaking:{match_id}:{game_room}:createjoin"
+    room_name format
+    - default mode -> ```"garuda_matchmaking:{match_id} // "":{game_room}:{max_players}"```
+    - create/join mode -> ```"garuda_matchmaking:{match_id}:{game_room}:createjoin"```
 
-      In case of create-join match making,
-      - room_name does not have max_players key
-      - player creating the room, has a "room_player_count" key in room collection player map
-      - rest of the players have -1 as "room_player_count"
-      - before addition to room, player with non negative "room_player_count" is searched
+    In case of create-join match making,
+    - room_name does not have max_players key
+    - player creating the room, has a "room_player_count" key in room collection player map
+    - rest of the players have -1 as "room_player_count"
+    - before addition to room, player with non negative "room_player_count" is searched
 
 
-    ## Explanation
-      Reasons of player collection,
-      - when a player leaves matchmaker channel, we can easily find game_room of the player and remove that player from the room collection
-      - it also easier to fetch channel pid from player collection, instead of querying for room_name and player_id
+  ## Explanation
+    Reasons of player collection,
+    - when a player leaves matchmaker channel, we can easily find game_room of the player and remove that player from the room collection
+    - it also easier to fetch channel pid from player collection, instead of querying for room_name and player_id
 
-      Less versatile but fast filters
-      room_name format ensures players with same match_id and max_players grouped together, hence we wont be needing to check max_players of each players
-      while match making. This also gives flexibity to add more filters to match making.
-      But players cant be matched with players with different max_player count
+    Less versatile but fast filters
+    room_name format ensures players with same match_id and max_players grouped together, hence we wont be needing to check max_players of each players
+    while match making. This also gives flexibity to add more filters to match making.
+    But players cant be matched with players with different max_player count
 
-      More versatile but slow filters
-      filter data can be added to player map in room collection, which can be queried while match making
-      leverages over time
+    More versatile but slow filters
+    filter data can be added to player map in room collection, which can be queried while match making
+    leverages over time
 
-    ## Flow
-      - A player comes with match_id(optional), game_room and max_players.
-      - room_name is constructed with the inputs
-      - presence of room name as key in room collections is checked
-        if not present,
-          player_map is inserted into the map present as its value in  ets
-          added to "players" key in player collection
+  ## Flow
+    - A player comes with match_id(optional), game_room and max_players.
+    - room_name is constructed with the inputs
+    - presence of room name as key in room collections is checked
+      if not present,
+        player_map is inserted into the map present as its value in  ets
+        added to "players" key in player collection
+      else,
+        it is checked if max_players will be reached on addition of player,
+        if yes,
+        required number of players are popped from player map in room collection and match is made.
+        that players entry is deleted from player collection
         else,
-          it is checked if max_players will be reached on addition of player,
-          if yes
-            required number of players are popped from player map in room collection and match is made.
-            that players entry is deleted from player collection
-          else
-            player added to map in room collection
-            player added to player collection
+        player added to map in room collection
+        player added to player collection
 
 
   """

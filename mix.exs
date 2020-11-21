@@ -39,6 +39,12 @@ defmodule Garuda.MixProject do
         Garuda.GameChannel,
         Garuda.GameRoom
       ],
+      Matchmaker: [
+        Garuda.Matchmaker.MatchmakerChannel,
+        Garuda.Matchmaker.MatchmakerFunction,
+        Garuda.Matchmaker.MatchmakerSupervisor,
+        Garuda.Matchmaker.MatchmakerConstants
+      ],
       RoomManager: [
         Garuda.RoomManager.RoomSheduler,
         Garuda.RoomManager,
@@ -54,7 +60,7 @@ defmodule Garuda.MixProject do
       {:phoenix, "~> 1.5.3"},
       {:phoenix_html, "~> 2.14.1 or ~> 2.15"},
       {:jason, "~> 1.0"},
-      {:phoenix_live_view, "~> 0.12.0 or ~> 0.14.4"},
+      {:phoenix_live_view, "~> 0.12.0 or ~> 0.14.4 or ~> 0.15.0"},
       {:uuid, "~> 1.1.8"},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.22", only: :dev, runtime: false}
