@@ -143,8 +143,8 @@ defmodule Garuda.Matchmaker.MatchmakerFunction do
   defp is_room_open?(room_name) do
     room_population = room_name |> getmap_players_in_room()
 
-    case room_population do
-      [] -> false
+    case Enum.count(room_population) do
+      0 -> false
       _ -> true
     end
   end
@@ -212,7 +212,7 @@ defmodule Garuda.Matchmaker.MatchmakerFunction do
   end
 
   # puts the first player in the players map
-  defp put_player_in_room([], player_details, m_create()) do
+  defp put_player_in_room(_player_map, player_details, m_create()) do
     player_id = player_details["player_id"]
     game_room = player_details["room_name"]
     match_id = player_details["match_id"] || ""
@@ -233,7 +233,6 @@ defmodule Garuda.Matchmaker.MatchmakerFunction do
   defp put_player_in_room(map_players_in_room, player_details, m_join()) do
     player_id = player_details["player_id"]
     # search for player with non-negative player count
-    IO.puts("match data #{inspect(map_players_in_room)}")
 
     player_count =
       map_players_in_room
@@ -256,7 +255,9 @@ defmodule Garuda.Matchmaker.MatchmakerFunction do
     )
   end
 
-  defp put_player_in_room(_map_players_in_room, _player_details, _mode), do: nil
+  defp put_player_in_room(_map_players_in_room, _player_details, _mode) do
+    nil
+  end
 
   defp put_player_in_room(
          map_players_in_room,
