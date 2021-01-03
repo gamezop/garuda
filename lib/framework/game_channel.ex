@@ -53,7 +53,7 @@ defmodule Garuda.GameChannel do
             Logger.metadata(match_id: match_id)
           end
 
-          RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
+          result = RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
             game_room_id: room_id,
             player_id: socket.assigns.player_id
           )

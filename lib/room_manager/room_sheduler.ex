@@ -28,7 +28,7 @@ defmodule Garuda.RoomManager.RoomSheduler do
     * opts        - Extra options for the game-room.
   """
   def create_room(room_module, room_name, opts) do
-    GenServer.cast(__MODULE__, {:create_room, room_module, room_name, opts})
+    GenServer.call(__MODULE__, {:create_room, room_module, room_name, opts})
   end
 
   # BREAKING => dispose room now accepts room_name instead of room_pid, this will break
@@ -53,9 +53,9 @@ defmodule Garuda.RoomManager.RoomSheduler do
   end
 
   @impl true
-  def handle_cast({:create_room, module, room_name, opts}, state) do
-    state = create_game_room(module, room_name, opts, state)
-    {:noreply, state}
+  def handle_call({:create_room, module, room_name, opts}, _from, state) do
+    {result, state} = create_game_room(module, room_name, opts, state)
+    {:reply, result, state}
   end
 
   @impl true
@@ -141,8 +141,8 @@ defmodule Garuda.RoomManager.RoomSheduler do
   # Finds an available dynamic supervisor and assign it to create the given game-room.
   defp create_game_room(module, name, opts, state) do
     {supervisor, state} = get_available_supervisor(state)
-    DynamicSupervisor.start_child(supervisor, {module, name: Records.via_tuple(name), opts: opts})
-    state
+    result = DynamicSupervisor.start_child(supervisor, {module, name: Records.via_tuple(name), opts: opts})
+    {result, state}
   end
 
   # Monitors the game room and send the room-state to RoomDb.

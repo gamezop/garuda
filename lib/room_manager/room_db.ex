@@ -149,7 +149,10 @@ defmodule Garuda.RoomManager.RoomDb do
   @impl true
   def handle_info({:room_join, room_pid, opts}, state) do
     player_id = Keyword.get(opts, :player_id)
-    state = put_in(state["rooms"][room_pid]["players"][player_id], true)
+    state = case state["rooms"][room_pid] do
+      nil -> state
+      _ -> put_in(state["rooms"][room_pid]["players"][player_id], true)
+    end
     {:noreply, state}
   end
 
