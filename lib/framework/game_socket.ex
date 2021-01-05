@@ -29,6 +29,7 @@ defmodule Garuda.GameSocket do
       import unquote(__MODULE__)
       use Phoenix.Socket
       Phoenix.Socket.channel("garuda_matchmaker:*", Garuda.Matchmaker.MatchmakerChannel)
+      Phoenix.Socket.channel("garuda_neo_matchmaker:*", Garuda.NeoMatcherChannel)
 
       def connect(params, socket, _connect_info) do
         IO.puts("connect params - #{inspect(params)}")
