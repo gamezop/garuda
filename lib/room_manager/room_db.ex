@@ -135,8 +135,8 @@ defmodule Garuda.RoomManager.RoomDb do
   @impl true
   def handle_call({:get_channel_name, room_pid}, _from, state) do
     room_name = state["rooms"][room_pid]["room_name"]
-    room_id = state["rooms"][room_pid]["room_id"]
-    {:reply, "room_" <> room_name <> ":" <> room_id, state}
+    match_id = state["rooms"][room_pid]["match_id"]
+    {:reply, "room_" <> room_name <> ":" <> match_id, state}
   end
 
   @impl true

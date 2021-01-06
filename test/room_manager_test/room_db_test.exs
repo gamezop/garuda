@@ -13,26 +13,26 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
   end
 
   test "initial state to room db", context do
-    assert :sys.get_state(context[:pid]) === %{"conn" => %{}, "rooms" => %{}}
+    assert :sys.get_state(context[:pid]) === %{"channels" => %{}, "rooms" => %{}}
   end
 
   test " save room state ", context do
-    RoomDb.save_room_state(context[:tpid], %{
+    RoomDb.save_init_room_state(context[:tpid], %{
       "ref" => nil,
       "room_name" => "test_room",
-      "room_id" => "test_id",
+      "match_id" => "test_id",
       "time" => :os.system_time(:milli_seconds)
     })
 
-    assert :sys.get_state(context[:pid])["rooms"][context[:tpid]]["room_id"] ===
+    assert :sys.get_state(context[:pid])["rooms"][context[:tpid]]["match_id"] ===
              "test_id"
   end
 
   test "delete room state", context do
-    RoomDb.save_room_state(context[:tpid], %{
+    RoomDb.save_init_room_state(context[:tpid], %{
       "ref" => nil,
       "room_name" => "test_room",
-      "room_id" => "test_id",
+      "match_id" => "test_id",
       "time" => :os.system_time(:milli_seconds)
     })
 
@@ -44,34 +44,34 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
 
   test "new channel connection", context do
     RoomDb.on_channel_connection(context[:tpid], %{})
-    assert :sys.get_state(context[:pid])["conn"][context[:tpid]] === %{}
+    assert :sys.get_state(context[:pid])["channels"][context[:tpid]] === %{}
   end
 
   test "on channel disconnection", context do
     RoomDb.on_channel_connection(context[:tpid], %{})
     RoomDb.on_channel_terminate(context[:tpid])
-    assert :sys.get_state(context[:pid])["conn"][context[:tpid]] === nil
+    assert :sys.get_state(context[:pid])["channels"][context[:tpid]] === nil
   end
 
   test "get stats", context do
-    RoomDb.save_room_state(context[:tpid], %{
+    RoomDb.save_init_room_state(context[:tpid], %{
       "ref" => nil,
       "room_name" => "test_room",
-      "room_id" => "test_id",
+      "match_id" => "test_id",
       "time" => :os.system_time(:milli_seconds)
     })
 
     RoomDb.on_channel_connection(context[:tpid], %{})
 
-    assert %{"num_conns" => _conns_info, "num_rooms" => _rooms_info, "rooms" => _room_info} =
+    assert %{"channel_count" => _conns_info, "room_count" => _rooms_info, "rooms" => _room_info} =
              RoomDb.get_stats()
   end
 
   test "get channel name", context do
-    RoomDb.save_room_state(context[:tpid], %{
+    RoomDb.save_init_room_state(context[:tpid], %{
       "ref" => nil,
       "room_name" => "test_room",
-      "room_id" => "test_id",
+      "match_id" => "test_id",
       "time" => :os.system_time(:milli_seconds)
     })
 
