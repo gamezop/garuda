@@ -47,10 +47,10 @@ defmodule Garuda.GameSocket do
   ## Example
       game_channel "tictactoe", TictactoePhxWeb.TictactoeChannel, TictactoePhx.TictactoeRoom
   """
-  defmacro game_channel(channel_name, channel_module, game_room_module) do
+  defmacro game_channel(channel_name, channel_module, room_module) do
     quote do
       Phoenix.Socket.channel("room_" <> unquote(channel_name) <> ":*", unquote(channel_module),
-        assigns: %{"#{unquote(channel_name)}_room_module" => unquote(game_room_module)}
+        assigns: %{"#{unquote(channel_name)}_room_module" => unquote(room_module)}
       )
     end
   end

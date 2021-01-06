@@ -45,20 +45,21 @@ defmodule Garuda.GameChannel do
 
       def join("room_" <> room_id, params, socket) do
         if apply(__MODULE__, :authorized?, [params]) do
-          RoomDb.on_channel_connection(socket.channel_pid, %{})
+          _resp = RoomDb.on_channel_connection(socket.channel_pid, %{})
+
+          if Keyword.get(unquote(opts), :log) do
+            Logger.metadata(room_id: room_id)
+          end
 
           [room_name, match_id] = String.split(room_id, ":")
 
-          if Keyword.get(unquote(opts), :log) do
-            Logger.metadata(match_id: match_id)
-          end
+          _result =
+            RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
+              room_id: room_id,
+              player_id: socket.assigns.player_id
+            )
 
-          result = RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
-            game_room_id: room_id,
-            player_id: socket.assigns.player_id
-          )
-
-          send(self(), {"garuda_on_join", params, socket})
+          send(self(), {"garuda_after_join", params, socket})
 
           {:ok, socket}
         else
@@ -66,7 +67,7 @@ defmodule Garuda.GameChannel do
         end
       end
 
-      def handle_info({"garuda_on_join", params, socket}, state) do
+      def handle_info({"garuda_after_join", params, socket}, state) do
         apply(__MODULE__, :on_join, [params, socket])
         {:noreply, state}
       end
@@ -74,7 +75,7 @@ defmodule Garuda.GameChannel do
       def terminate(reason, socket) do
         RoomDb.on_channel_terminate(socket.channel_pid)
 
-        if Records.is_process_registered(get_game_room_id(socket)) do
+        if Records.is_process_registered(get_room_id(socket)) do
           GenServer.cast(id(socket), {"on_channel_leave", socket.assigns.player_id, reason})
         end
 
@@ -88,18 +89,18 @@ defmodule Garuda.GameChannel do
     * socket - socket state of game-channel
   """
   def id(socket) do
-    [_namespace, game_room_id] = String.split(socket.topic, "_")
-    Records.via_tuple(game_room_id)
+    [_namespace, room_id] = String.split(socket.topic, "_")
+    Records.via_tuple(room_id)
   end
 
   @doc """
   Returns the internal id of game-room
     * socket - socket state of game-channel
   """
-  @spec get_game_room_id(map()) :: String.t()
-  def get_game_room_id(socket) do
-    [_namespace, game_room_id] = String.split(socket.topic, "_")
-    game_room_id
+  @spec get_room_id(map()) :: String.t()
+  def get_room_id(socket) do
+    [_namespace, room_id] = String.split(socket.topic, "_")
+    room_id
   end
 
   @doc """
@@ -108,8 +109,8 @@ defmodule Garuda.GameChannel do
   """
   @spec get_room_name(map()) :: String.t()
   def get_room_name(socket) do
-    [_namespace, game_room_id] = String.split(socket.topic, "_")
-    [room_name, _match_id] = String.split(game_room_id, ":")
+    [_namespace, room_id] = String.split(socket.topic, "_")
+    [room_name, _match_id] = String.split(room_id, ":")
     room_name
   end
 end

@@ -11,15 +11,19 @@ defmodule Garuda.RoomManager.RoomDb do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  @spec save_room_state(pid(), map()) :: :ok
+  @spec save_init_room_state(pid(), map()) :: any()
   @doc """
   Saves the specific game-room info with its pid as key
 
     * `room_pid` - pid of the particular game-room
     * `info` - A map of game-room info
   """
-  def save_room_state(room_pid, info) do
-    GenServer.cast(__MODULE__, {:save_room, {room_pid, info}})
+  def save_init_room_state(room_pid, info) do
+    GenServer.call(__MODULE__, {"save_room", {room_pid, info}})
+  end
+
+  def on_room_join(room_pid, opts) do
+    GenServer.call(__MODULE__, {"room_join", room_pid, opts})
   end
 
   @doc """
@@ -52,22 +56,22 @@ defmodule Garuda.RoomManager.RoomDb do
     GenServer.cast(__MODULE__, {:delete_room, room_pid})
   end
 
-  @spec on_channel_connection(pid(), map()) :: :ok
   @doc """
   Saves the game-channel info with its pid as key.
 
   As of now this is mainly used for getting the actual no:of connections on the server.
   """
+  @spec on_channel_connection(pid(), map()) :: any()
   def on_channel_connection(channel_pid, info) do
-    GenServer.cast(__MODULE__, {:channel_conn, {channel_pid, info}})
+    GenServer.call(__MODULE__, {"channel_join", {channel_pid, info}})
   end
 
-  @spec on_channel_terminate(pid()) :: :ok
+  @spec on_channel_terminate(pid()) :: any()
   @doc """
   Deletes a game-channel's info with give channel pid
   """
   def on_channel_terminate(channel_pid) do
-    GenServer.cast(__MODULE__, {:channel_disconn, channel_pid})
+    GenServer.call(__MODULE__, {"channel_leave", channel_pid})
   end
 
   @spec get_stats :: map()
@@ -80,23 +84,17 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @spec get_room_state(String.t()) :: map()
   @doc """
-  Returns the state of a given `game_room_id`
+  Returns the state of a given `room_id`
 
-    * `game_room_id` - Unique combination of room_name + ":" + room_id., ex ("tictactoe:ACFBEBW")
+    * `room_id` - Unique combination of room_name + ":" + room_id., ex ("tictactoe:ACFBEBW")
   """
-  def get_room_state(game_room_id) do
-    GenServer.call(__MODULE__, {:get_room_state, game_room_id})
+  def get_room_state(room_id) do
+    GenServer.call(__MODULE__, {:get_room_state, room_id})
   end
 
   @impl true
   def init(_opts) do
-    {:ok, %{"rooms" => %{}, "conn" => %{}}}
-  end
-
-  @impl true
-  def handle_cast({:save_room, {room_pid, info}}, state) do
-    state = put_in(state["rooms"][room_pid], info)
-    {:noreply, state}
+    {:ok, %{"rooms" => %{}, "channels" => %{}}}
   end
 
   @impl true
@@ -106,22 +104,28 @@ defmodule Garuda.RoomManager.RoomDb do
   end
 
   @impl true
-  def handle_cast({:channel_conn, {channel_pid, _info}}, state) do
-    state = put_in(state["conn"][channel_pid], %{})
-    {:noreply, state}
+  def handle_call({"save_room", {room_pid, info}}, _from, state) do
+    state = put_in(state["rooms"][room_pid], info)
+    {:reply, "ok", state}
   end
 
   @impl true
-  def handle_cast({:channel_disconn, channel_pid}, state) do
-    {_popped_val, state} = pop_in(state["conn"][channel_pid])
-    {:noreply, state}
+  def handle_call({"channel_leave", channel_pid}, _from, state) do
+    {popped_val, state} = pop_in(state["channels"][channel_pid])
+    {:reply, popped_val, state}
+  end
+
+  @impl true
+  def handle_call({"channel_join", {channel_pid, _info}}, _from, state) do
+    state = put_in(state["channels"][channel_pid], %{})
+    {:reply, "ok", state}
   end
 
   @impl true
   def handle_call(:get_stats, _from, state) do
     stats = %{
-      "num_conns" => Map.keys(state["conn"]) |> Enum.count(),
-      "num_rooms" => Map.keys(state["rooms"]) |> Enum.count(),
+      "channel_count" => Map.keys(state["channels"]) |> Enum.count(),
+      "room_count" => Map.keys(state["rooms"]) |> Enum.count(),
       "rooms" => state["rooms"]
     }
 
@@ -136,10 +140,10 @@ defmodule Garuda.RoomManager.RoomDb do
   end
 
   @impl true
-  def handle_call({:get_room_state, game_room_id}, _from, state) do
+  def handle_call({:get_room_state, room_id}, _from, state) do
     room_state =
-      case Records.is_process_registered(game_room_id) do
-        true -> :sys.get_state(Records.via_tuple(game_room_id))
+      case Records.is_process_registered(room_id) do
+        true -> :sys.get_state(Records.via_tuple(room_id))
         false -> %{}
       end
 
@@ -147,12 +151,15 @@ defmodule Garuda.RoomManager.RoomDb do
   end
 
   @impl true
-  def handle_info({:room_join, room_pid, opts}, state) do
+  def handle_call({"room_join", room_pid, opts}, _from, state) do
     player_id = Keyword.get(opts, :player_id)
-    state = case state["rooms"][room_pid] do
-      nil -> state
-      _ -> put_in(state["rooms"][room_pid]["players"][player_id], true)
-    end
+
+    state =
+      case state["rooms"][room_pid] do
+        nil -> state
+        _ -> put_in(state["rooms"][room_pid]["players"][player_id], true)
+      end
+
     {:noreply, state}
   end
 

@@ -84,8 +84,8 @@ defmodule Garuda.Monitor.OrwellDashboard do
     Logger.info("===================DISPOSE================")
     Logger.info("dispose room ..... #{inspect(params["name"])}:#{inspect(params["id"])}")
     # Logger.info "to be done...."
-    game_room_id = params["name"] <> ":" <> params["id"]
-    RoomSheduler.dispose_room(game_room_id)
+    room_id = params["name"] <> ":" <> params["id"]
+    RoomSheduler.dispose_room(room_id)
     {:noreply, socket}
   end
 
@@ -102,8 +102,8 @@ defmodule Garuda.Monitor.OrwellDashboard do
     Logger.info("=================UPDATE============")
     Logger.info("#{inspect(socket.assigns)}")
 
-    # game_room_id = socket.assigns.selected_room_name <> ":" <> socket.assigns.selected_room_id
-    # socket = assign(socket, :room_state, DashboardData.get_room_state(game_room_id) |> state_to_string )
+    # room_id = socket.assigns.selected_room_name <> ":" <> socket.assigns.selected_room_id
+    # socket = assign(socket, :room_state, DashboardData.get_room_state(room_id) |> state_to_string )
     socket =
       assign_room_state(
         socket.assigns.selected_room_name,
@@ -140,10 +140,10 @@ defmodule Garuda.Monitor.OrwellDashboard do
   end
 
   defp assign_room_state(name, id, soc) do
-    game_room_id = name <> ":" <> id
-    # BREAKING => DashboardData.get_room_state(game_room_id) deprecated,
+    room_id = name <> ":" <> id
+    # BREAKING => DashboardData.get_room_state(room_id) deprecated,
     # use RoomDb.get_room_state()
-    assign(soc, :room_state, DashboardData.get_room_state(game_room_id) |> state_to_string)
+    assign(soc, :room_state, DashboardData.get_room_state(room_id) |> state_to_string)
   end
 
   defp make_list_rooms(room_map) do

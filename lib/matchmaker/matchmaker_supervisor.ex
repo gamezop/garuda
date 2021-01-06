@@ -11,6 +11,7 @@ defmodule Garuda.Matchmaker.MatchmakerSupervisor do
   use Supervisor
   alias Garuda.Matchmaker.MatchmakerFunction
   alias Garuda.NeoMatcher.Matcher
+
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end

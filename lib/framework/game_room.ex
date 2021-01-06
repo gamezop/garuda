@@ -28,7 +28,7 @@ defmodule Garuda.GameRoom do
   @doc """
   Entry point for the game-room.
   `create` replaces `init` of genserver.
-  `opts` available currently are `:game_room_id` and `:player_id`
+  `opts` available currently are `:room_id` and `:player_id`
   We can setup the inital gamestate by returning `{:ok, game_state}`,
   where `game_state` is any erlang term.
 
@@ -45,26 +45,6 @@ defmodule Garuda.GameRoom do
 
       def start_link(name: name, opts: opts) do
         result = GenServer.start_link(__MODULE__, opts, name: name)
-
-        case result do
-          {:ok, child} ->
-            send(Garuda.RoomManager.RoomSheduler, {:room_started, child, opts})
-
-          {:error, {:already_started, child}} ->
-            send(Garuda.RoomManager.RoomDb, {
-              :room_join,
-              child,
-              opts
-            })
-
-          {:error, error} ->
-            IO.puts("Room creation Failed due to #{inspect(error)}")
-
-          _ ->
-            IO.puts("Error")
-        end
-
-        result
       end
 
       @impl true

@@ -24,11 +24,11 @@ defmodule Garuda.RoomManager.RoomSheduler do
   @doc """
   Assign an available dynamic supervisor to create and supervise the given game-room.
     * room_module - The game-room module handler.
-    * room_name   - Unique name of the game-room.
+    * room_id     - Unique id of the game-room.
     * opts        - Extra options for the game-room.
   """
-  def create_room(room_module, room_name, opts) do
-    GenServer.call(__MODULE__, {:create_room, room_module, room_name, opts})
+  def create_room(room_module, room_id, opts) do
+    GenServer.call(__MODULE__, {"create_room", room_module, room_id, opts})
   end
 
   # BREAKING => dispose room now accepts room_name instead of room_pid, this will break
@@ -53,8 +53,8 @@ defmodule Garuda.RoomManager.RoomSheduler do
   end
 
   @impl true
-  def handle_call({:create_room, module, room_name, opts}, _from, state) do
-    {result, state} = create_game_room(module, room_name, opts, state)
+  def handle_call({"create_room", room_module, room_id, opts}, _from, state) do
+    {result, state} = create_game_room(room_module, room_id, opts, state)
     {:reply, result, state}
   end
 
@@ -74,16 +74,6 @@ defmodule Garuda.RoomManager.RoomSheduler do
     # Handles the termination of a game room, by deleting it from RoomDb.
     # object is pid
     RoomDb.delete_room(object)
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({:room_started, pid, opts}, state) do
-    # Handles the creation of a game room
-    game_room_id = Keyword.get(opts, :game_room_id)
-    player_id = Keyword.get(opts, :player_id)
-    [room_name, room_id] = String.split(game_room_id, ":")
-    add_room_to_state(pid, room_name, room_id, player_id)
     {:noreply, state}
   end
 
@@ -138,23 +128,52 @@ defmodule Garuda.RoomManager.RoomSheduler do
     end
   end
 
-  # Finds an available dynamic supervisor and assign it to create the given game-room.
-  defp create_game_room(module, name, opts, state) do
+  # Finds an available dynamic supervisor and assign delegate that to create the given game-room.
+  defp create_game_room(room_module, room_id, opts, state) do
     {supervisor, state} = get_available_supervisor(state)
-    result = DynamicSupervisor.start_child(supervisor, {module, name: Records.via_tuple(name), opts: opts})
+
+    result =
+      DynamicSupervisor.start_child(
+        supervisor,
+        {room_module, name: Records.via_tuple(room_id), opts: opts}
+      )
+
+    case result do
+      {:ok, child} ->
+        on_game_room_start(child, opts)
+
+      {:error, {:already_started, child}} ->
+        _resp = RoomDb.on_room_join(child, opts)
+
+      {:error, error} ->
+        IO.puts("Room creation Failed due to #{inspect(error)}")
+
+      _ ->
+        IO.puts("Error")
+    end
+
     {result, state}
   end
 
+  defp on_game_room_start(pid, opts) do
+    # Handles the creation of a game room
+    room_id = Keyword.get(opts, :room_id)
+    player_id = Keyword.get(opts, :player_id)
+    [room_name, match_id] = String.split(room_id, ":")
+    add_room_to_state(pid, room_name, match_id, player_id)
+  end
+
   # Monitors the game room and send the room-state to RoomDb.
-  defp add_room_to_state(room_pid, room_name, room_id, player_id) do
+  defp add_room_to_state(room_pid, room_name, match_id, player_id) do
     ref = Process.monitor(room_pid)
 
-    RoomDb.save_room_state(room_pid, %{
-      "ref" => ref,
-      "room_name" => room_name,
-      "room_id" => room_id,
-      "players" => %{player_id => true},
-      "time" => :os.system_time(:milli_seconds)
-    })
+    _resp =
+      RoomDb.save_init_room_state(room_pid, %{
+        "ref" => ref,
+        "room_name" => room_name,
+        "match_id" => match_id,
+        "players" => %{player_id => true},
+        "time" => :os.system_time(:milli_seconds)
+      })
   end
 end
