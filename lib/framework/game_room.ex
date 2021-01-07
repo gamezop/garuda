@@ -8,8 +8,8 @@ defmodule Garuda.GameRoom do
       defmodule TictactoePhx.TictactoeRoom do
         use Garuda.GameRoom, expiry: 120_000
         def create(_opts) do
-          # Initing the game.
-          {:ok, %{}}
+          # Return the initial game state.
+          gamestate
         end
       end
   ## Other available functions
@@ -29,12 +29,12 @@ defmodule Garuda.GameRoom do
   Entry point for the game-room.
   `create` replaces `init` of genserver.
   `opts` available currently are `:room_id` and `:player_id`
-  We can setup the inital gamestate by returning `{:ok, game_state}`,
+  We can setup the inital gamestate by returning `game_state` from `create`,
   where `game_state` is any erlang term.
 
   Note: `create` is called only once.
   """
-  @callback create(opts :: term()) :: {:ok, game_state :: term()}
+  @callback create(opts :: term()) :: game_state :: term()
 
   defmacro __using__(opts \\ []) do
     quote do
@@ -50,18 +50,24 @@ defmodule Garuda.GameRoom do
       @impl true
       def init(init_opts) do
         Process.send_after(self(), "expire_room", @g_room_expiry)
-        {:ok, init_game_state} = apply(__MODULE__, :create, [init_opts])
+        {:ok, nil, {:continue, "create"}}
       end
 
       @impl true
-      def handle_cast(:dispose_room, game_state) do
-        {:stop, {:shutdown, "Disposing room"}, game_state}
-      end
-
-      @impl true
-      def handle_cast({"on_channel_leave", player_id, reason}, game_state) do
-        send(Garuda.RoomManager.RoomDb, {:room_left, self(), player_id})
+      def handle_continue("create", state) do
+        game_state = apply(__MODULE__, :create, [init_opts])
         {:noreply, game_state}
+      end
+
+      @impl true
+      def handle_call("dispose_room", _from, game_state) do
+        {:stop, {:shutdown, "Disposing room"}, "ok", game_state}
+      end
+
+      @impl true
+      def handle_call({"on_channel_leave", player_id, reason}, _from, game_state) do
+        RoomDb.on_player_leave(self(), player_id)
+        {:reply, "ok", game_state}
       end
 
       @impl true
@@ -71,7 +77,7 @@ defmodule Garuda.GameRoom do
 
       @impl true
       def terminate(reason, _game_state) do
-        send(Garuda.RoomManager.RoomDb, {:room_terminated, self()})
+        RoomDb.delete_room(self())
       end
 
       @doc """

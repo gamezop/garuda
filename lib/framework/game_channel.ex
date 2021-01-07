@@ -75,11 +75,17 @@ defmodule Garuda.GameChannel do
       def terminate(reason, socket) do
         RoomDb.on_channel_terminate(socket.channel_pid)
 
-        if Records.is_process_registered(get_room_id(socket)) do
-          GenServer.cast(id(socket), {"on_channel_leave", socket.assigns.player_id, reason})
-        end
+        case reason do
+          {:shutdown, :left} ->
+            apply(__MODULE__, :on_leave, [reason, socket])
 
-        apply(__MODULE__, :on_leave, [reason, socket])
+            if Records.is_process_registered(get_room_id(socket)) do
+              GenServer.call(id(socket), {"on_channel_leave", socket.assigns.player_id, reason})
+            end
+
+          _ ->
+            socket
+        end
       end
     end
   end

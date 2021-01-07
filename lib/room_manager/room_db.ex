@@ -4,6 +4,7 @@ defmodule Garuda.RoomManager.RoomDb do
 
   Orwell uses data from RoomDb, for rendering the live interactive dashboard
   """
+  alias Garuda.NeoMatcher.Matcher
   alias Garuda.RoomManager.Records
   use GenServer
 
@@ -22,6 +23,12 @@ defmodule Garuda.RoomManager.RoomDb do
     GenServer.call(__MODULE__, {"save_room", {room_pid, info}})
   end
 
+  @doc """
+  Adds a new player details to the room. (Expecting room is already created)
+    * `room_pid` - pid of the game-room
+    * `opts` - A keyword-list of player-info
+  """
+  @spec on_room_join(pid(), Keyword.t()) :: any
   def on_room_join(room_pid, opts) do
     GenServer.call(__MODULE__, {"room_join", room_pid, opts})
   end
@@ -39,21 +46,22 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @doc """
   Returns the game-channel name associated with the game-room's pid.
-
-  This function is mostly used by game-rooms to send messages to their
+    * pid - game-room pid.
+  This function is mostly used by game-rooms to get the game-channel name, so
+  that they can send messages to the channel.
   corresponding game-channels.
   """
   @spec get_channel_name(pid()) :: String.t()
   def get_channel_name(pid) do
-    GenServer.call(__MODULE__, {:get_channel_name, pid})
+    GenServer.call(__MODULE__, {"get_channel_name", pid})
   end
 
-  @spec delete_room(pid()) :: :ok
+  @spec delete_room(pid()) :: any()
   @doc """
   Deletes a game-room info with a pid.
   """
   def delete_room(room_pid) do
-    GenServer.cast(__MODULE__, {:delete_room, room_pid})
+    GenServer.call(__MODULE__, {"delete_room", room_pid})
   end
 
   @doc """
@@ -92,15 +100,25 @@ defmodule Garuda.RoomManager.RoomDb do
     GenServer.call(__MODULE__, {:get_room_state, room_id})
   end
 
+  @doc """
+  Removes the player from RoomDb.
+    * room_pid - pid of the game-room
+    * player_id - unique_id of player
+  """
+  @spec on_player_leave(pid(), String.t()) :: any()
+  def on_player_leave(room_pid, player_id) do
+    GenServer.call(__MODULE__, {"room_left", room_pid, player_id})
+  end
+
   @impl true
   def init(_opts) do
     {:ok, %{"rooms" => %{}, "channels" => %{}}}
   end
 
   @impl true
-  def handle_cast({:delete_room, room_pid}, state) do
-    {_popped_val, state} = pop_in(state["rooms"][room_pid])
-    {:noreply, state}
+  def handle_call({"delete_room", room_pid}, _from, state) do
+    {popped_val, state} = pop_in(state["rooms"][room_pid])
+    {:reply, popped_val, state}
   end
 
   @impl true
@@ -133,7 +151,7 @@ defmodule Garuda.RoomManager.RoomDb do
   end
 
   @impl true
-  def handle_call({:get_channel_name, room_pid}, _from, state) do
+  def handle_call({"get_channel_name", room_pid}, _from, state) do
     room_name = state["rooms"][room_pid]["room_name"]
     match_id = state["rooms"][room_pid]["match_id"]
     {:reply, "room_" <> room_name <> ":" <> match_id, state}
@@ -160,18 +178,16 @@ defmodule Garuda.RoomManager.RoomDb do
         _ -> put_in(state["rooms"][room_pid]["players"][player_id], true)
       end
 
-    {:noreply, state}
+    {:reply, "ok", state}
   end
 
   @impl true
-  def handle_info({:room_left, room_pid, player_id}, state) do
-    {_popped_val, state} = pop_in(state["rooms"][room_pid]["players"][player_id])
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({:room_terminated, room_pid}, state) do
-    {_popped_val, state} = pop_in(state["rooms"][room_pid])
-    {:noreply, state}
+  def handle_call({"room_left", room_pid, player_id}, _from, state) do
+    {popped_val, state} = pop_in(state["rooms"][room_pid]["players"][player_id])
+    room_name = state["rooms"][room_pid]["room_name"]
+    match_id = state["rooms"][room_pid]["match_id"]
+    room_id = room_name <> ":" <> match_id
+    Matcher.remove_player(room_id, player_id)
+    {:reply, popped_val, state}
   end
 end

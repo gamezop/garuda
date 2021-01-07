@@ -38,7 +38,7 @@ defmodule Garuda.RoomManager.RoomSheduler do
     * room_name - unique game-room name, that should be disposed.
   """
   def dispose_room(room_name) do
-    GenServer.cast(__MODULE__, {:dispose_room, room_name})
+    GenServer.call(__MODULE__, {"dispose_room", room_name})
   end
 
   @impl true
@@ -59,14 +59,14 @@ defmodule Garuda.RoomManager.RoomSheduler do
   end
 
   @impl true
-  def handle_cast({:dispose_room, room_name}, state) do
+  def handle_call({"dispose_room", room_name}, _from, state) do
     room_pid = Records.via_tuple(room_name)
 
     if Records.is_process_registered(room_pid) do
-      GenServer.cast(room_pid, :dispose_room)
+      GenServer.call(room_pid, "dispose_room")
     end
 
-    {:noreply, state}
+    {:reply, "ok", state}
   end
 
   @impl true
