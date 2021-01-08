@@ -50,11 +50,11 @@ defmodule Garuda.GameRoom do
       @impl true
       def init(init_opts) do
         Process.send_after(self(), "expire_room", @g_room_expiry)
-        {:ok, nil, {:continue, "create"}}
+        {:ok, nil, {:continue, {"create", init_opts}}}
       end
 
       @impl true
-      def handle_continue("create", state) do
+      def handle_continue({"create", init_opts}, state) do
         game_state = apply(__MODULE__, :create, [init_opts])
         {:noreply, game_state}
       end
