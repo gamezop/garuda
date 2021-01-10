@@ -28,20 +28,6 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
              "test_id"
   end
 
-  test "delete room state", context do
-    RoomDb.save_init_room_state(context[:tpid], %{
-      "ref" => nil,
-      "room_name" => "test_room",
-      "match_id" => "test_id",
-      "time" => :os.system_time(:milli_seconds)
-    })
-
-    RoomDb.delete_room(context[:tpid])
-
-    assert :sys.get_state(context[:pid])["rooms"][context[:tpid]] ===
-             nil
-  end
-
   test "new channel connection", context do
     RoomDb.on_channel_connection(context[:tpid], %{})
     assert :sys.get_state(context[:pid])["channels"][context[:tpid]] === %{}

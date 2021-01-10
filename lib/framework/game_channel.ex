@@ -56,10 +56,11 @@ defmodule Garuda.GameChannel do
           _result =
             RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
               room_id: room_id,
-              player_id: socket.assigns.player_id
+              player_id: socket.assigns.player_id,
+              max_players: params["max_players"]
             )
 
-          send(self(), {"garuda_after_join", params, socket})
+          send(self(), {"garuda_after_join", params})
 
           {:ok, socket}
         else
@@ -67,9 +68,9 @@ defmodule Garuda.GameChannel do
         end
       end
 
-      def handle_info({"garuda_after_join", params, socket}, state) do
+      def handle_info({"garuda_after_join", params}, socket) do
         apply(__MODULE__, :on_join, [params, socket])
-        {:noreply, state}
+        {:noreply, socket}
       end
 
       def terminate(reason, socket) do

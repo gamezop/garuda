@@ -117,6 +117,11 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @impl true
   def handle_call({"delete_room", room_pid}, _from, state) do
+    room_name = state["rooms"][room_pid]["room_name"]
+    match_id = state["rooms"][room_pid]["match_id"]
+    # IO.puts("#{room_name}:#{match_id}")
+    room_id = "#{room_name}:#{match_id}"
+    Matcher.delete_room(room_id)
     {popped_val, state} = pop_in(state["rooms"][room_pid])
     {:reply, popped_val, state}
   end

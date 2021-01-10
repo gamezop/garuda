@@ -90,8 +90,8 @@ defmodule Garuda.GameRoom do
       @doc """
       Shutdowns the game-room gracefully.
       """
-      def shutdown do
-        GenServer.stop(self(), {:shutdown, "Room shutdown"})
+      def shutdown(game_state) do
+        send(self(), "expire_room")
       end
     end
   end

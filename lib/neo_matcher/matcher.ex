@@ -25,6 +25,10 @@ defmodule Garuda.NeoMatcher.Matcher do
     GenServer.call(__MODULE__, {"remove_player", room_name, player_id})
   end
 
+  def delete_room(room_name) do
+    GenServer.call(__MODULE__, {"delete_room", room_name})
+  end
+
   ####################
   @impl true
   def init(_opts) do
@@ -55,6 +59,12 @@ defmodule Garuda.NeoMatcher.Matcher do
       _ ->
         {:reply, "room_not_found", state}
     end
+  end
+
+  @impl true
+  def handle_call({"delete_room", room_name}, _from, state) do
+    :ets.delete(:neo_matcher, room_name)
+    {:reply, "deleted", state}
   end
 
   ######################
