@@ -54,8 +54,10 @@ defmodule Garuda.MatchMaker.Matcher do
 
   @impl true
   def handle_call({"join_or_create", match_details}, _from, state) do
-    match_id = is_valid_details?(match_details)
-    |> handle_join_or_create(match_details)
+    match_id =
+      is_valid_details?(match_details)
+      |> handle_join_or_create(match_details)
+
     {:reply, match_id, state}
   end
 
@@ -82,7 +84,10 @@ defmodule Garuda.MatchMaker.Matcher do
     :ets.new(:matcher_table, [:named_table])
   end
 
-  defp is_valid_details?(%{"room_name" => name} = _match_details) when is_nil(name) or name === "", do: false
+  defp is_valid_details?(%{"room_name" => name} = _match_details)
+       when is_nil(name) or name === "",
+       do: false
+
   defp is_valid_details?(_match_details), do: true
 
   # Clause for handling public rooms (coming wihtout match_id)
@@ -98,6 +103,7 @@ defmodule Garuda.MatchMaker.Matcher do
       [] ->
         new_match_id = UUID.uuid4() |> String.split("-") |> List.first()
         create_new_room(room_name, new_match_id, player_id, max_players, false)
+
       room_list ->
         [room_name | _t] = List.first(room_list)
         [{_room_name, details} | _t] = :ets.lookup(:matcher_table, room_name)
@@ -126,7 +132,8 @@ defmodule Garuda.MatchMaker.Matcher do
   defp handle_join_or_create(false, _details), do: nil
 
   defp get_available_public_rooms(room_name) do
-    unlocked_rooms = :ets.match(:matcher_table, {:"$1", %{"locked" => false, "is_private" => false}})
+    unlocked_rooms =
+      :ets.match(:matcher_table, {:"$1", %{"locked" => false, "is_private" => false}})
 
     Enum.filter(unlocked_rooms, fn [room | _t] ->
       String.split(room, ":") |> List.first() ===
@@ -150,8 +157,12 @@ defmodule Garuda.MatchMaker.Matcher do
       :ets.insert(
         :matcher_table,
         {room_name,
-         %{"players" => new_list, "locked" => false, "max_players" => details["max_players"],
-         "is_private" => details["is_private"]}}
+         %{
+           "players" => new_list,
+           "locked" => false,
+           "max_players" => details["max_players"],
+           "is_private" => details["is_private"]
+         }}
       )
     end
   end
@@ -170,18 +181,18 @@ defmodule Garuda.MatchMaker.Matcher do
     :ets.insert(
       :matcher_table,
       {unique_room_name,
-        %{"players" => [player_id], "locked" => is_room_lock,
-        "max_players" => max_players,
-        "is_private" => is_private
-        }
-      }
+       %{
+         "players" => [player_id],
+         "locked" => is_room_lock,
+         "max_players" => max_players,
+         "is_private" => is_private
+       }}
     )
 
     match_id
   end
 
   defp add_player_to_room(room_name, player_id, details, is_private) do
-
     # update the player list
     updated_player_list = [player_id | details["players"]]
     is_room_lock = Enum.count(updated_player_list) === details["max_players"]
@@ -199,5 +210,4 @@ defmodule Garuda.MatchMaker.Matcher do
 
     room_name |> String.split(":") |> List.last()
   end
-
 end

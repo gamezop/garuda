@@ -40,7 +40,7 @@ defmodule Garuda.MixProject do
         Garuda.GameRoom
       ],
       Matchmaker: [
-        Garuda.Matchmaker.Matcher,
+        Garuda.Matchmaker.Matcher
       ],
       RoomManager: [
         Garuda.RoomManager.RoomSheduler,
