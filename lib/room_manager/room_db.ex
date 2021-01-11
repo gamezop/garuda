@@ -4,7 +4,7 @@ defmodule Garuda.RoomManager.RoomDb do
 
   Orwell uses data from RoomDb, for rendering the live interactive dashboard
   """
-  alias Garuda.NeoMatcher.Matcher
+  alias Garuda.MatchMaker.Matcher
   alias Garuda.RoomManager.Records
   use GenServer
 
