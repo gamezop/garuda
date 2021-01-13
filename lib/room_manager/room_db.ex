@@ -28,7 +28,7 @@ defmodule Garuda.RoomManager.RoomDb do
     * `room_pid` - pid of the game-room
     * `opts` - A keyword-list of player-info
   """
-  @spec on_room_join(pid(), Keyword.t()) :: any
+  @spec on_room_join(pid(), Keyword.t()) :: String.t()
   def on_room_join(room_pid, opts) do
     GenServer.call(__MODULE__, {"room_join", room_pid, opts})
   end
@@ -177,13 +177,9 @@ defmodule Garuda.RoomManager.RoomDb do
   def handle_call({"room_join", room_pid, opts}, _from, state) do
     player_id = Keyword.get(opts, :player_id)
 
-    state =
-      case state["rooms"][room_pid] do
-        nil -> state
-        _ -> put_in(state["rooms"][room_pid]["players"][player_id], true)
-      end
+    {status, state} = add_to_room(state["rooms"][room_pid], player_id, room_pid, state)
 
-    {:reply, "ok", state}
+    {:reply, status, state}
   end
 
   @impl true
@@ -194,5 +190,19 @@ defmodule Garuda.RoomManager.RoomDb do
     room_id = room_name <> ":" <> match_id
     Matcher.remove_player(room_id, player_id)
     {:reply, popped_val, state}
+  end
+
+  ## helper
+  defp add_to_room(nil, _player_id, _room_pid, state), do: {"error", state}
+
+  defp add_to_room(_players, player_id, room_pid, state) do
+    case state["rooms"][room_pid]["players"][player_id] do
+      nil ->
+        state = put_in(state["rooms"][room_pid]["players"][player_id], true)
+        {"ok", state}
+
+      _ ->
+        {"already_exists", state}
+    end
   end
 end

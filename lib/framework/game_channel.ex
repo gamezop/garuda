@@ -29,6 +29,7 @@ defmodule Garuda.GameChannel do
   alias Garuda.RoomManager.Records
 
   @callback on_join(params :: map, socket :: Phoenix.Socket) :: any()
+  @callback on_rejoin(params :: map, socket :: Phoenix.Socket) :: any()
   @callback authorized?(params :: map()) :: boolean
   @callback on_leave(
               reason :: :normal | :shutdown | {:shutdown, :left | :closed | term()},
@@ -53,16 +54,25 @@ defmodule Garuda.GameChannel do
 
           [room_name, match_id] = String.split(room_id, ":")
 
-          _result =
+          status =
             RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
               room_id: room_id,
               player_id: socket.assigns.player_id,
               max_players: params["max_players"]
             )
 
-          send(self(), {"garuda_after_join", params})
+          case status do
+            "ok" ->
+              send(self(), {"garuda_after_join", params})
+              {:ok, socket}
 
-          {:ok, socket}
+            "already_exists" ->
+              send(self(), {"garuda_after_rejoin", params})
+              {:ok, socket}
+
+            _ ->
+              {:error, %{reason: "No room exists"}}
+          end
         else
           {:error, %{reason: "unauthorized"}}
         end
@@ -70,6 +80,11 @@ defmodule Garuda.GameChannel do
 
       def handle_info({"garuda_after_join", params}, socket) do
         apply(__MODULE__, :on_join, [params, socket])
+        {:noreply, socket}
+      end
+
+      def handle_info({"garuda_after_rejoin", params}, socket) do
+        apply(__MODULE__, :on_rejoin, [params, socket])
         {:noreply, socket}
       end
 
