@@ -31,10 +31,6 @@ defmodule Garuda.GameChannel do
   @callback on_join(params :: map, socket :: Phoenix.Socket) :: any()
   @callback on_rejoin(params :: map, socket :: Phoenix.Socket) :: any()
   @callback authorized?(params :: map()) :: boolean
-  @callback on_leave(
-              reason :: :normal | :shutdown | {:shutdown, :left | :closed | term()},
-              socket :: Phoenix.Socket
-            ) :: any()
   defmacro __using__(opts \\ []) do
     quote do
       @behaviour unquote(__MODULE__)
@@ -84,6 +80,10 @@ defmodule Garuda.GameChannel do
       end
 
       def handle_info({"garuda_after_rejoin", params}, socket) do
+        if Records.is_process_registered(get_room_id(socket)) do
+          GenServer.call(id(socket), {"on_rejoin", socket.assigns.player_id})
+        end
+
         apply(__MODULE__, :on_rejoin, [params, socket])
         {:noreply, socket}
       end
@@ -91,16 +91,8 @@ defmodule Garuda.GameChannel do
       def terminate(reason, socket) do
         RoomDb.on_channel_terminate(socket.channel_pid)
 
-        case reason do
-          {:shutdown, :left} ->
-            apply(__MODULE__, :on_leave, [reason, socket])
-
-            if Records.is_process_registered(get_room_id(socket)) do
-              GenServer.call(id(socket), {"on_channel_leave", socket.assigns.player_id, reason})
-            end
-
-          _ ->
-            socket
+        if Records.is_process_registered(get_room_id(socket)) do
+          GenServer.call(id(socket), {"on_channel_leave", socket.assigns.player_id, reason})
         end
       end
     end

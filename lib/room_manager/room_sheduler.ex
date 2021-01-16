@@ -176,7 +176,7 @@ defmodule Garuda.RoomManager.RoomSheduler do
         "ref" => ref,
         "room_name" => room_name,
         "match_id" => match_id,
-        "players" => %{player_id => true},
+        "players" => %{player_id => %{"recon_ref" => true, "rejoin" => false}},
         "time" => :os.system_time(:milli_seconds)
       })
   end
