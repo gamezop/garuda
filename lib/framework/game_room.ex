@@ -2,7 +2,9 @@ defmodule Garuda.GameRoom do
   @moduledoc """
   Behaviours and functions for implementing core game-logic rooms.
 
-  Game-logic rooms are under-the-hood genservers, with certain extra properties.
+  Game-rooms are under-the-hood genservers, with certain extra gamey properties.
+  We can write our gameplay code in game-room, and game-channel act as event handler.
+  Events from game-channel can be then route to corresponding game-room functions.
 
   ## Using GameRoom
       defmodule TictactoePhx.TictactoeRoom do
@@ -11,30 +13,30 @@ defmodule Garuda.GameRoom do
           # Return the initial game state.
           gamestate
         end
+
+        def leave(player_id, game_state) do
+          # handle player leaving.
+          {:ok, gamestate}
+        end
       end
-  ## Other available functions
-  ### get_channel
-  Returns the corresponding game-channel of the game-room
-  Useful when we want to broadcast to the game-channel from game-rooms.
-  ### shutdown
-  Shutdowns the game-room gracefully.
-  Its recommended to shutdown the game-room, when we know, game-rooms are empty,
-  and will not be used further.
   ## Options
-  * expiry - expires the game-room in given milliseconds, default to 3hr.
+    * expiry - game-room will shutdown itself after given time(ms). Default 3hr
+    * reconnection_timeout - Time game-room will wait for a player who left non-explicitly. Default 20s
   """
   alias Garuda.RoomManager.RoomDb
 
   @doc """
-  Entry point for the game-room.
-  `create` replaces `init` of genserver.
-  `opts` available currently are `:room_id` and `:player_id`
-  We can setup the inital gamestate by returning `game_state` from `create`,
-  where `game_state` is any erlang term.
+  create the game-room.
 
+  We can setup the inital gamestate by returning game_state, where game_state is any erlang term.
   Note: `create` is called only once.
   """
   @callback create(opts :: term()) :: game_state :: term()
+  @doc """
+  Handle player leaving.
+
+  We can handle the gamestate, when a player leaves.
+  """
   @callback leave(player_id :: String.t(), game_state :: term()) :: {:ok, game_state :: term()}
   defmacro __using__(opts \\ []) do
     quote do
@@ -71,14 +73,11 @@ defmodule Garuda.GameRoom do
         game_state =
           case reason do
             {:shutdown, :left} ->
-              IO.puts("player left, explicitly")
               RoomDb.on_player_leave(self(), player_id)
               {:ok, game_state} = apply(__MODULE__, :leave, [player_id, game_state])
               game_state
 
             _ ->
-              IO.puts("player left, non-explicitly, will wait")
-
               timer_ref =
                 Process.send_after(
                   self(),
@@ -96,12 +95,10 @@ defmodule Garuda.GameRoom do
       @impl true
       def handle_call({"on_rejoin", player_id}, _from, game_state) do
         timer_ref = RoomDb.get_timer_ref(self(), player_id)
-        IO.puts(inspect(timer_ref))
 
         if is_reference(timer_ref) do
           _resp = Process.cancel_timer(timer_ref)
           RoomDb.update_timer_ref(self(), player_id, true)
-          IO.puts("Timer Cleared!! => #{player_id}")
         end
 
         {:reply, "ok", game_state}
@@ -116,12 +113,10 @@ defmodule Garuda.GameRoom do
       def handle_info({"reconnection_timeout", player_id}, game_state) do
         case RoomDb.has_rejoined(self(), player_id) do
           true ->
-            IO.puts("Player rejoined, dont kick him out")
             RoomDb.update_timer_ref(self(), player_id, true)
             {:noreply, game_state}
 
           _ ->
-            IO.puts("Player kicked out explcitly on timeout => #{player_id}")
             RoomDb.on_player_leave(self(), player_id)
             {:ok, game_state} = apply(__MODULE__, :leave, [player_id, game_state])
             {:noreply, game_state}
@@ -132,20 +127,25 @@ defmodule Garuda.GameRoom do
       def terminate(reason, _game_state) do
         RoomDb.delete_room(self())
       end
-
-      @doc """
-      Returns the corresponding game-channel of the game-room
-      """
-      def get_channel do
-        RoomDb.get_channel_name(self())
-      end
-
-      @doc """
-      Shutdowns the game-room gracefully.
-      """
-      def shutdown(game_state) do
-        send(self(), "expire_room")
-      end
     end
+  end
+
+  @doc """
+  Returns the corresponding game-channel of the game-room.
+
+  We can broadcast to game-channel from game-room itself like,
+
+  `DingoWeb.Endpoint.broadcast!(get_channel(), "line_counts", %{"msg" => "heelp"})`
+
+  """
+  def get_channel do
+    RoomDb.get_channel_name(self())
+  end
+
+  @doc """
+  Shutdowns the game-room gracefully.
+  """
+  def shutdown do
+    send(self(), "expire_room")
   end
 end

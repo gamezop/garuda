@@ -158,7 +158,6 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @impl true
   def handle_call({"channel_leave", channel_pid}, _from, state) do
-    IO.puts("channel termiantein")
     {popped_val, state} = pop_in(state["channels"][channel_pid])
     {:reply, popped_val, state}
   end

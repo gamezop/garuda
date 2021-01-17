@@ -2,22 +2,15 @@ defmodule Garuda.GameSocket do
   @moduledoc """
   Defines specific game behaviours over `Phoenix.Socket`
 
-  GameSocket extends `Phoenix.Socket` and adds needed macros and functions for defining game behaviours.
+  GameSocket extends `Phoenix.Socket` with extra game behaviours.
 
   ## Using GameSocket
-  In user_socket.ex, we can do
+  In `user_socket.ex`, we can do
       defmodule TictactoePhxWeb.UserSocket do
         use Garuda.GameSocket
 
         game_channel "tictactoe", TictactoePhxWeb.TictactoeChannel, TictactoePhx.TictactoeRoom
 
-        @impl true
-        def connect(_params, socket, _connect_info) do
-          {:ok, socket}
-        end
-
-        @impl true
-        def id(_socket), do: nil
       end
 
   You might have noticed that instead of `use Phoenix.Socket`, we are using `Garuda.GameSocket` and instead of
@@ -31,14 +24,13 @@ defmodule Garuda.GameSocket do
       Phoenix.Socket.channel("garuda_matchmaker:*", Garuda.MatchMakerChannel)
 
       def connect(params, socket, _connect_info) do
-        IO.puts("connect params - #{inspect(params)}")
         {:ok, assign(socket, :player_id, params["playerId"])}
       end
     end
   end
 
   @doc """
-  Defines a game channel matching the given game-channel name.
+  Defines a game-channel and corresponding game-room name.
     * `channel_name` - A game-channel name as string, ex "tictactoe"
     * `channel_module` - The game-channel module handler, ex `TictactoePhxWeb.TictactoeChannel`
     * `game_room_module` - The game-room module handler, where core game logic resides, ex `TictactoePhx.TictactoeRoom`
