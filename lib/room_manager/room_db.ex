@@ -28,7 +28,7 @@ defmodule Garuda.RoomManager.RoomDb do
     * `room_pid` - pid of the game-room
     * `opts` - A keyword-list of player-info
   """
-  @spec on_room_join(pid(), Keyword.t()) :: any
+  @spec on_room_join(pid(), Keyword.t()) :: String.t()
   def on_room_join(room_pid, opts) do
     GenServer.call(__MODULE__, {"room_join", room_pid, opts})
   end
@@ -110,6 +110,30 @@ defmodule Garuda.RoomManager.RoomDb do
     GenServer.call(__MODULE__, {"room_left", room_pid, player_id})
   end
 
+  @doc """
+  Updates player_id key in the room with reconnection_timer ref
+  """
+  @spec update_timer_ref(pid(), String.t(), any()) :: any
+  def update_timer_ref(room_pid, player_id, ref) do
+    GenServer.call(__MODULE__, {"update_timer_ref", room_pid, player_id, ref})
+  end
+
+  @doc """
+  Returns player_id key in the room with reconnection_timer ref
+  """
+  @spec get_timer_ref(pid(), String.t()) :: any
+  def get_timer_ref(room_pid, player_id) do
+    GenServer.call(__MODULE__, {"get_timer_ref", room_pid, player_id})
+  end
+
+  @doc """
+  Returns rejoin status of player in the room
+  """
+  @spec has_rejoined(pid(), String.t()) :: any
+  def has_rejoined(room_pid, player_id) do
+    GenServer.call(__MODULE__, {"has_rejoined", room_pid, player_id})
+  end
+
   @impl true
   def init(_opts) do
     {:ok, %{"rooms" => %{}, "channels" => %{}}}
@@ -177,13 +201,9 @@ defmodule Garuda.RoomManager.RoomDb do
   def handle_call({"room_join", room_pid, opts}, _from, state) do
     player_id = Keyword.get(opts, :player_id)
 
-    state =
-      case state["rooms"][room_pid] do
-        nil -> state
-        _ -> put_in(state["rooms"][room_pid]["players"][player_id], true)
-      end
+    {status, state} = add_to_room(state["rooms"][room_pid], player_id, room_pid, state)
 
-    {:reply, "ok", state}
+    {:reply, status, state}
   end
 
   @impl true
@@ -193,6 +213,73 @@ defmodule Garuda.RoomManager.RoomDb do
     match_id = state["rooms"][room_pid]["match_id"]
     room_id = room_name <> ":" <> match_id
     Matcher.remove_player(room_id, player_id)
+    state = manage_room_deletion(room_pid, state)
+    # Disposing the game-room, if no player in roomDb's room
+    # Or call on_leave on game-room.
     {:reply, popped_val, state}
+  end
+
+  @impl true
+  def handle_call({"update_timer_ref", room_pid, player_id, ref}, _from, state) do
+    state =
+      case ref do
+        ref when is_reference(ref) ->
+          put_in(state["rooms"][room_pid]["players"][player_id]["recon_ref"], ref)
+
+        _ ->
+          put_in(state["rooms"][room_pid]["players"][player_id], %{
+            "recon_ref" => ref,
+            "rejoin" => false
+          })
+      end
+
+    {:reply, "updated", state}
+  end
+
+  @impl true
+  def handle_call({"get_timer_ref", room_pid, player_id}, _from, state) do
+    ref = state["rooms"][room_pid]["players"][player_id]["recon_ref"]
+    {:reply, ref, state}
+  end
+
+  @impl true
+  def handle_call({"has_rejoined", room_pid, player_id}, _from, state) do
+    status = state["rooms"][room_pid]["players"][player_id]["rejoin"]
+    {:reply, status, state}
+  end
+
+  ## helper
+  defp add_to_room(nil, _player_id, _room_pid, state), do: {"error", state}
+
+  defp add_to_room(_players, player_id, room_pid, state) do
+    case state["rooms"][room_pid]["players"][player_id] do
+      nil ->
+        state =
+          put_in(state["rooms"][room_pid]["players"][player_id], %{
+            "recon_ref" => true,
+            "rejoin" => false
+          })
+
+        {"ok", state}
+
+      _ ->
+        state = put_in(state["rooms"][room_pid]["players"][player_id]["rejoin"], true)
+        {"already_exists", state}
+    end
+  end
+
+  def manage_room_deletion(room_pid, state) do
+    player_count =
+      state["rooms"][room_pid]["players"]
+      |> Enum.count()
+
+    case player_count do
+      0 ->
+        {_popped_val, state} = pop_in(state["rooms"][room_pid])
+        state
+
+      _ ->
+        state
+    end
   end
 end

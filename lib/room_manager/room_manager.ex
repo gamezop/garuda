@@ -31,7 +31,8 @@ defmodule Garuda.RoomManager do
         create_dynamic_supervisors(Keyword.get(opts, :max_sup, @default_dynamic_supervisors)),
         {RoomSheduler, []},
         {RoomDb, []}
-      ] |> List.flatten()
+      ]
+      |> List.flatten()
 
     Supervisor.init(children, strategy: :one_for_one)
   end

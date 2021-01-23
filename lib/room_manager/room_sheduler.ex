@@ -54,8 +54,8 @@ defmodule Garuda.RoomManager.RoomSheduler do
 
   @impl true
   def handle_call({"create_room", room_module, room_id, opts}, _from, state) do
-    {result, state} = create_game_room(room_module, room_id, opts, state)
-    {:reply, result, state}
+    {status, state} = create_game_room(room_module, room_id, opts, state)
+    {:reply, status, state}
   end
 
   @impl true
@@ -138,21 +138,24 @@ defmodule Garuda.RoomManager.RoomSheduler do
         {room_module, name: Records.via_tuple(room_id), opts: opts}
       )
 
-    case result do
-      {:ok, child} ->
-        on_game_room_start(child, opts)
+    entry_status =
+      case result do
+        {:ok, child} ->
+          on_game_room_start(child, opts)
 
-      {:error, {:already_started, child}} ->
-        _resp = RoomDb.on_room_join(child, opts)
+        {:error, {:already_started, child}} ->
+          RoomDb.on_room_join(child, opts)
 
-      {:error, error} ->
-        IO.puts("Room creation Failed due to #{inspect(error)}")
+        {:error, error} ->
+          IO.puts("Room creation Failed due to #{inspect(error)}")
+          "error"
 
-      _ ->
-        IO.puts("Error")
-    end
+        _ ->
+          IO.puts("Error")
+          "error"
+      end
 
-    {result, state}
+    {entry_status, state}
   end
 
   defp on_game_room_start(pid, opts) do
@@ -161,6 +164,7 @@ defmodule Garuda.RoomManager.RoomSheduler do
     player_id = Keyword.get(opts, :player_id)
     [room_name, match_id] = String.split(room_id, ":")
     add_room_to_state(pid, room_name, match_id, player_id)
+    "ok"
   end
 
   # Monitors the game room and send the room-state to RoomDb.
@@ -172,7 +176,7 @@ defmodule Garuda.RoomManager.RoomSheduler do
         "ref" => ref,
         "room_name" => room_name,
         "match_id" => match_id,
-        "players" => %{player_id => true},
+        "players" => %{player_id => %{"recon_ref" => true, "rejoin" => false}},
         "time" => :os.system_time(:milli_seconds)
       })
   end

@@ -159,7 +159,7 @@ defmodule Garuda.MatchMaker.Matcher do
         {room_name,
          %{
            "players" => new_list,
-           "locked" => false,
+           "locked" => true,
            "max_players" => details["max_players"],
            "is_private" => details["is_private"]
          }}
