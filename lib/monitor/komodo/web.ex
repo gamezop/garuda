@@ -8,7 +8,7 @@ defmodule Garuda.Komodo.Web do
 
       use Phoenix.View,
         namespace: Garuda.Komodo,
-        root: "lib/komodo/templates"
+        root: "lib/monitor/komodo/templates"
 
       unquote(view_helpers())
     end
@@ -39,8 +39,8 @@ defmodule Garuda.Komodo.Web do
       # Import convenience functions for LiveView rendering
       import Phoenix.LiveView.Helpers
 
-      # Import dashboard built-in functions
-      import Garuda.Komodo.Helpers.LiveHelpers
+      # # Import dashboard built-in functions
+      # import Garuda.Komodo.Helpers.LiveHelpers
     end
   end
 

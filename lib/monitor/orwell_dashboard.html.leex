@@ -28,25 +28,25 @@
         </div>
     <%= for room <- @list_rooms do %>
         <div class="columns dashboard-columns">
-            <div class="column is-one-quarter dashboard-column"><%= room["room_id"] %></div>
+            <div class="column is-one-quarter dashboard-column"><%= room["match_id"] %></div>
             <div class="column is-one-quarter dashboard-column"><%= room["room_name"] %></div>
             <div class="column is-one-quarter dashboard-column"><%= room["time"] %></div>
             <div class="column is-one-quarter dashboard-column room-buttons">
                 <button class="button is-rounded is-primary"
                     phx-click="inspect"
                     phx-value-name="<%= room["room_name"] %>"
-                    phx-value-id="<%= room["room_id"] %>">
+                    phx-value-id="<%= room["match_id"] %>">
                     Inspect
                 </button>
                 <button class="button is-rounded is-danger"
                     phx-click="dispose"
                     phx-value-name="<%= room["room_name"] %>"
-                    phx-value-id="<%= room["room_id"] %>">
+                    phx-value-id="<%= room["match_id"] %>">
                     Dispose
                 </button>
             </div>
         </div>
-        <%= if @selected_room_id == room["room_id"] do %>
+        <%= if @selected_room_id == room["match_id"] do %>
         <div>
             <pre class="pre-block">
                 <code class="code-block">
