@@ -30,13 +30,13 @@ defmodule Garuda.Monitor.OrwellDashboard do
     Process.send_after(self(), :update, @polling_interval)
 
     # Get data from Game Manager
-    game_manager_data = RoomDb.get_stats()
+    game_manager_data = RoomDb.get_stats() |> IO.inspect()
 
     # assigning number of room, connections, and a list of room info to socket
     # selected_room to show inspect section
     {:ok,
-     assign(socket, :connections, game_manager_data["num_conns"])
-     |> assign(:num_rooms, game_manager_data["num_rooms"])
+     assign(socket, :connections, game_manager_data["channel_count"])
+     |> assign(:num_rooms, game_manager_data["room_count"])
      |> assign(
        :list_rooms,
        game_manager_data["rooms"]
@@ -53,8 +53,8 @@ defmodule Garuda.Monitor.OrwellDashboard do
   returns room state of selected_room
   """
   def handle_event("inspect", params, socket) do
-    Logger.info("=======INSPECT======== #{inspect(params)}")
-    Logger.info("#{inspect(socket.assigns)}")
+    # Logger.info("=======INSPECT======== #{inspect(params)}")
+    # Logger.info("#{inspect(socket.assigns)}")
 
     socket =
       assign_room_selection(
@@ -65,7 +65,7 @@ defmodule Garuda.Monitor.OrwellDashboard do
         socket
       )
 
-    Logger.info("#{inspect(socket.assigns)}")
+    # Logger.info("#{inspect(socket.assigns)}")
 
     ## Also assign the state of that room
     socket =
@@ -75,7 +75,7 @@ defmodule Garuda.Monitor.OrwellDashboard do
         socket
       )
 
-    Logger.info("#{inspect(socket.assigns)}")
+    # Logger.info("#{inspect(socket.assigns)}")
 
     {:noreply, socket}
   end
@@ -113,8 +113,8 @@ defmodule Garuda.Monitor.OrwellDashboard do
 
     {
       :noreply,
-      assign(socket, :connections, game_manager_data["num_conns"])
-      |> assign(:num_rooms, game_manager_data["num_rooms"])
+      assign(socket, :connections, game_manager_data["channel_count"])
+      |> assign(:num_rooms, game_manager_data["room_count"])
       |> assign(
         :list_rooms,
         game_manager_data["rooms"]
