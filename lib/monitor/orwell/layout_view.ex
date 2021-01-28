@@ -1,6 +1,6 @@
-defmodule Garuda.Komodo.LayoutView do
+defmodule Garuda.Orwell.LayoutView do
   @moduledoc false
-  use Garuda.Komodo.Web, :view
+  use Garuda.Orwell.Web, :view
 
   js_path = Path.join(__DIR__, "../../../priv/static/js/app.js")
   css_path = Path.join(__DIR__, "../../../priv/static/css/app.css")

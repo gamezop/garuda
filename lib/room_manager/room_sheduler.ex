@@ -60,9 +60,8 @@ defmodule Garuda.RoomManager.RoomSheduler do
 
   @impl true
   def handle_call({"dispose_room", room_name}, _from, state) do
-    room_pid = Records.via_tuple(room_name)
-
-    if Records.is_process_registered(room_pid) do
+    if Records.is_process_registered(room_name) do
+      room_pid = Records.via_tuple(room_name)
       GenServer.call(room_pid, "dispose_room")
     end
 

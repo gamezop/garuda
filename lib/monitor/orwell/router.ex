@@ -1,12 +1,11 @@
 defmodule Garuda.Monitor.Router do
-
   defmacro monitor(path, opts \\ []) do
     quote bind_quoted: binding() do
       scope path, alias: false, as: false do
         import Phoenix.LiveView.Router, only: [live: 4]
-        "/"<>path_atom = path
+        "/" <> path_atom = path
         opts = Garuda.Monitor.Router.__options__(opts, path_atom)
-        live "/", Garuda.Monitor.OrwellDashboard, String.to_atom(path_atom), opts
+        live("/", Garuda.Monitor.OrwellDashboard, String.to_atom(path_atom), opts)
       end
     end
   end
@@ -18,7 +17,7 @@ defmodule Garuda.Monitor.Router do
     [
       session: {__MODULE__, :__session__, []},
       private: %{live_socket_path: live_socket_path},
-      layout: {Garuda.Komodo.LayoutView, :dash},
+      layout: {Garuda.Orwell.LayoutView, :dash},
       as: String.to_atom(path_atom)
     ]
   end
@@ -27,5 +26,4 @@ defmodule Garuda.Monitor.Router do
   def __session__(_conn) do
     %{}
   end
-
 end

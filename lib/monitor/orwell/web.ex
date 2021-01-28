@@ -1,4 +1,4 @@
-defmodule Garuda.Komodo.Web do
+defmodule Garuda.Orwell.Web do
   @moduledoc false
 
   @doc false
@@ -7,8 +7,8 @@ defmodule Garuda.Komodo.Web do
       @moduledoc false
 
       use Phoenix.View,
-        namespace: Garuda.Komodo,
-        root: "lib/monitor/komodo/templates"
+        namespace: Garuda.Orwell,
+        root: "lib/monitor/orwell/templates"
 
       unquote(view_helpers())
     end
@@ -40,7 +40,7 @@ defmodule Garuda.Komodo.Web do
       import Phoenix.LiveView.Helpers
 
       # # Import dashboard built-in functions
-      # import Garuda.Komodo.Helpers.LiveHelpers
+      # import Garuda.Orwell.Helpers.LiveHelpers
     end
   end
 

@@ -65,7 +65,8 @@ defmodule Garuda.GameRoom do
 
       @impl true
       def handle_call("dispose_room", _from, game_state) do
-        {:stop, {:shutdown, "Disposing room"}, "ok", game_state}
+        send(self(), "expire_room")
+        {:reply, "disposing", game_state}
       end
 
       @impl true
