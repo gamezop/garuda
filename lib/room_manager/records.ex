@@ -15,20 +15,24 @@ defmodule Garuda.RoomManager.Records do
       across codebase and replacing registry, if we want to) ☮.
   """
   @doc """
-    Registering and accessing named process.
+  Registering and accessing named process.
 
-    Accepts `process_name`
+  Accepts `process_name`
   """
   def via_tuple(process_name) do
     {:via, Registry, {GarudaRegistry, process_name}}
   end
 
   @doc """
-    Returns if a process is still in Registry
+  Returns if a process is still in Registry
 
-    Accepts `process_name`
+  Accepts `process_name`
+  Returns `boolean`
   """
   def is_process_registered(process_name) do
-    Registry.lookup(GarudaRegistry, process_name)
+    case Registry.lookup(GarudaRegistry, process_name) do
+      [] -> false
+      _ -> true
+    end
   end
 end

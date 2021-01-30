@@ -1,15 +1,10 @@
 defmodule Garuda.Matchmaker.MatchmakerSupervisor do
   @moduledoc """
-    Supervises the core room components
-
-    Core room components are dynamic game supervisors, roomSheduler and roomDb.
-
-    RoomSupervisor creates and supervises all the dynamic supervisors, which in turn
-    supervises the actual game rooms.
+  Supervises the core matchmaking process
   """
 
   use Supervisor
-  alias Garuda.Matchmaker.MatchFunction
+  alias Garuda.MatchMaker.Matcher
 
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
@@ -18,7 +13,7 @@ defmodule Garuda.Matchmaker.MatchmakerSupervisor do
   @impl true
   def init(_opts) do
     children = [
-      MatchFunction
+      Matcher
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

@@ -1,68 +1,137 @@
 defmodule Garuda.GameChannel do
   @moduledoc """
-    Phoenix Channels abstractions, game specific behaviours and functions
+  Defines specific game behaviours over `Phoenix.Channel`.
+
+  GameChannel extends `Phoenix.Channel` and defines game-behaviours.
+
+  ## Using GameChannel
+      defmodule TictactoePhxWeb.TictactoeChannel do
+        use Garuda.GameChannel
+
+        @impl true
+        def on_join(_params, _socket) do
+          IO.puts("Player Joined")
+        end
+
+        @impl true
+        def on_rejoin(_params, _socket) do
+          IO.puts("Player rejoined")
+        end
+
+        @impl true
+        def authorized?(_params) do
+          # Custom authorization code
+          true
+        end
+
+        @impl true
+        def handle_in("player_move", cell, socket) do
+          # Handling usual events from client
+          {:noreply, socket}
+        end
+      end
+
+  You might have noticed that instead of `use Phoenix.Channel`, we are using `Garuda.GameChannel`.
   """
   alias Garuda.RoomManager.Records
 
+  @doc """
+  handles game-channel join.
+
+  `on_join` is called after socket connection is established successfully.
+  """
   @callback on_join(params :: map, socket :: Phoenix.Socket) :: any()
+
+  @doc """
+  handles game-channel re-join.
+
+  Called when a player re-joins the game-channel, ex after network reconnection.
+  """
+  @callback on_rejoin(params :: map, socket :: Phoenix.Socket) :: any()
+
+  @doc """
+  Verifies the channel connection
+
+  Channel connection is only established , if `authorized?`, returns true.
+  `params` is the object that is send from the client.
+  """
   @callback authorized?(params :: map()) :: boolean
-  @callback on_leave(
-              reason :: :normal | :shutdown | {:shutdown, :left | :closed | term()},
-              socket :: Phoenix.Socket
-            ) :: any()
-  defmacro __using__(_opts \\ []) do
+  defmacro __using__(opts \\ []) do
     quote do
       @behaviour unquote(__MODULE__)
       import unquote(__MODULE__)
       use Phoenix.Channel
+      require Logger
       alias Garuda.RoomManager.RoomDb
       alias Garuda.RoomManager.RoomSheduler
 
       def join("room_" <> room_id, params, socket) do
         if apply(__MODULE__, :authorized?, [params]) do
-          Process.send_after(self(), {"after_join", params}, 50)
-          RoomDb.on_channel_connection(socket.channel_pid, %{})
-          {:ok, apply(unquote(__MODULE__), :setup_socket_state, [room_id, socket])}
+          _resp = RoomDb.on_channel_connection(socket.channel_pid, %{})
+
+          if Keyword.get(unquote(opts), :log) do
+            Logger.metadata(room_id: room_id)
+          end
+
+          [room_name, match_id] = String.split(room_id, ":")
+
+          status =
+            RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
+              room_id: room_id,
+              player_id: socket.assigns.player_id,
+              max_players: params["max_players"]
+            )
+
+          case status do
+            "ok" ->
+              send(self(), {"garuda_after_join", params})
+              {:ok, socket}
+
+            "already_exists" ->
+              send(self(), {"garuda_after_rejoin", params})
+              {:ok, socket}
+
+            _ ->
+              {:error, %{reason: "No room exists"}}
+          end
         else
           {:error, %{reason: "unauthorized"}}
         end
       end
 
-      def handle_info({"after_join", params}, socket) do
-        RoomSheduler.create_room(
-          socket.assigns.game_room_module,
-          socket.assigns.garuda_game_room_id,
-          game_room_id: socket.assigns.garuda_game_room_id
-        )
-
+      def handle_info({"garuda_after_join", params}, socket) do
         apply(__MODULE__, :on_join, [params, socket])
+        {:noreply, socket}
+      end
+
+      def handle_info({"garuda_after_rejoin", params}, socket) do
+        [_namespace, room_id] = String.split(socket.topic, "_")
+
+        if Records.is_process_registered(room_id) do
+          GenServer.call(id(socket), {"on_rejoin", socket.assigns.player_id})
+        end
+
+        apply(__MODULE__, :on_rejoin, [params, socket])
         {:noreply, socket}
       end
 
       def terminate(reason, socket) do
         RoomDb.on_channel_terminate(socket.channel_pid)
-        apply(__MODULE__, :on_leave, [reason, socket])
+        [_namespace, room_id] = String.split(socket.topic, "_")
+
+        if Records.is_process_registered(room_id) do
+          GenServer.call(id(socket), {"on_channel_leave", socket.assigns.player_id, reason})
+        end
       end
     end
   end
 
   @doc """
-    Sets the basic room properties in socket's memory
-    Expects the room_id (basically game roomid) in a pattern like "room_name:match_id"
-  """
-  def setup_socket_state(room_id, socket) do
-    [room_name, match_id] = String.split(room_id, ":")
-
-    Phoenix.Socket.assign(socket, :garuda_room_name, room_name)
-    |> Phoenix.Socket.assign(:garuda_match_id, match_id)
-    |> Phoenix.Socket.assign(:garuda_game_room_id, room_id)
-  end
-
-  @doc """
-    Returns the via tuple of process from registry
-    Expects channel socket
+  Returns the process id of game-room
+    * socket - socket state of game-channel
   """
   def id(socket) do
-    Records.via_tuple(socket.assigns.garuda_game_room_id)
+    [_namespace, room_id] = String.split(socket.topic, "_")
+    Records.via_tuple(room_id)
   end
 end

@@ -1,14 +1,21 @@
 defmodule Garuda.MixProject do
+  @moduledoc false
   use Mix.Project
 
   def project do
     [
       app: :garuda,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.10",
       compilers: [:phoenix] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      docs: docs(),
+      name: "Garuda",
+      package: package(),
+      description: """
+        A multiplayer game server framework for phoenix.
+      """
     ]
   end
 
@@ -19,13 +26,46 @@ defmodule Garuda.MixProject do
     ]
   end
 
+  defp docs do
+    [
+      logo: "logo.png",
+      groups_for_modules: groups_for_modules()
+    ]
+  end
+
+  defp groups_for_modules do
+    [
+      Frameworks: [
+        Garuda.GameSocket,
+        Garuda.GameChannel,
+        Garuda.GameRoom
+      ],
+      Matchmaker: [
+        Garuda.Matchmaker.Matcher
+      ],
+      RoomManager: [
+        Garuda.RoomManager.RoomSheduler,
+        Garuda.RoomManager,
+        Garuda.RoomManager.RoomDb,
+        Garuda.RoomManager.Records
+      ]
+    ]
+  end
+
+  defp package() do
+    [
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/madclaws/garuda"}
+    ]
+  end
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:phoenix, "~> 1.5.3"},
       {:phoenix_html, "~> 2.14.1 or ~> 2.15"},
       {:jason, "~> 1.0"},
-      {:phoenix_live_view, "~> 0.14.4"},
+      {:phoenix_live_view, "~> 0.12.0 or ~> 0.14.4 or ~> 0.15.0"},
       {:uuid, "~> 1.1.8"},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.22", only: :dev, runtime: false}

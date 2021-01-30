@@ -5,21 +5,24 @@
 
 ![Garuda CI](https://github.com/madclaws/garuda/workflows/Garuda%20CI/badge.svg)
   
-Garuda  is an Authoritative Multiplayer Game Server for phoenix framework.
+Garuda  is an Authoritative Multiplayer Game Server for [Phoenix framework](https://www.phoenixframework.org/)
 
 The project focuses on providing a *game framework system*, *matchmaking*, *real-time game-session monitoring system* and ease of usage both on server-side and client-side, by leveraging the powerful phoenix framework.   
 
-The goal of the framework is to be a standard netcode & matchmaking solution for all type of games. BEAM directly maps the use cases of a typical game server. So Let's build and run game servers, in a much more intuitive way.
+The goal of the framework is to be have a standard frameowrk & matchmaking solution for all type of games. BEAM directly maps the use cases of a typical game server. So Let's build and run game servers, in a much more intuitive way.
 
 Current feature list. 
  -   WebSocket-based communication (Will support more transports layer in future, thanks to phoenix)
  -   Simple API in the server-side and client-side.
- -  Game specific module behaviours.
+ -   Game specific module behaviours.
  -   Matchmaking clients into game sessions.
  -   Realtime interactive game session monitoring. 
 
+
+### Realtime monitoring
+![](assets/Garuda.gif)
 ### Client Side Support.
-Garuda ships with a javascript client **garudajs**, which allows easy communication with the server.
+Garuda ships with a javascript client [garudajs](https://github.com/madclaws/garudajs), which allows easy communication with the server (This also leverages [phoenixjs](https://hexdocs.pm/phoenix/js/)).
 
 ## Installation
 
@@ -28,15 +31,22 @@ Garuda ships with a javascript client **garudajs**, which allows easy communicat
 def  deps  do
 
 [
-  {:garuda, git: "https://github.com/madclaws/garuda.git", branch: "develop"},
+  {:garuda, git: "https://github.com/madclaws/garuda.git", branch: "master"},
 ]
 
 end
-
 ```
+
+### Demo
+
+A multiplayer Bingo game is developed, to showcase the Garuda. [try the game]
+Bingo client [source code](https://github.com/madclaws/Bingo)  
+Dingo (bingo server, using Garuda) [source code](https://github.com/madclaws/Dingo)
+
+## Contributors
+[ghostdsb](https://github.com/ghostdsb), [Brotchu](https://github.com/Brotchu)
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
+and published on [HexDocs](https://hexdocs.pm). Once published, the docs can be found at [https://hexdocs.pm/garuda](https://hexdocs.pm/garuda).
 
-be found at [https://hexdocs.pm/garuda](https://hexdocs.pm/garuda).

@@ -1,18 +1,5 @@
 defmodule Garuda do
   @moduledoc """
-  Documentation for `Garuda`.
+   This is the documentation for the Garuda Project.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Garuda.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end
