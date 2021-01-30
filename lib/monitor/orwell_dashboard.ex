@@ -9,7 +9,6 @@ defmodule Garuda.Monitor.OrwellDashboard do
   def mount(_params, _session, socket) do
     Process.send_after(self(), "update", @polling_interval)
     stats = RoomDb.get_stats()
-    Logger.info(inspect(stats))
 
     {:ok,
      assign(socket, :connections, stats["channel_count"])
