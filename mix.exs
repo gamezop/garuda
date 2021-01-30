@@ -12,6 +12,7 @@ defmodule Garuda.MixProject do
       deps: deps(),
       docs: docs(),
       name: "Garuda",
+      package: package(),
       description: """
         A multiplayer game server framework for phoenix.
       """
@@ -48,6 +49,13 @@ defmodule Garuda.MixProject do
         Garuda.RoomManager.RoomDb,
         Garuda.RoomManager.Records
       ]
+    ]
+  end
+
+  defp package() do
+    [
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/madclaws/garuda"}
     ]
   end
 
