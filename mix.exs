@@ -5,7 +5,7 @@ defmodule Garuda.MixProject do
   def project do
     [
       app: :garuda,
-      version: "0.2.0-rc.2",
+      version: "0.2.0",
       elixir: "~> 1.10",
       compilers: [:phoenix] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
