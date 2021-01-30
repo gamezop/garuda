@@ -31,7 +31,7 @@ Garuda ships with a javascript client [garudajs](https://github.com/madclaws/gar
 def  deps  do
 
 [
-  {:garuda, git: "https://github.com/madclaws/garuda.git", branch: "master"},
+  {:garuda, "~> 0.2.0"},
 ]
 
 end
@@ -39,7 +39,8 @@ end
 
 ### Demo
 
-A multiplayer Bingo game is developed, to showcase the Garuda. [try the game]
+A multiplayer Bingo game is developed, to showcase the Garuda. [try the game](https://madclaws.github.io/Bingo/)
+
 Bingo client [source code](https://github.com/madclaws/Bingo)  
 Dingo (bingo server, using Garuda) [source code](https://github.com/madclaws/Dingo)
 
