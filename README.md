@@ -37,6 +37,12 @@ def  deps  do
 end
 ```
 
+### Demo
+
+A multiplayer Bingo game is developed, to showcase the Garuda. [try the game]
+Bingo client [source code](https://github.com/madclaws/Bingo)  
+Dingo (bingo server, using Garuda) [source code](https://github.com/madclaws/Dingo)
+
 ## Contributors
 [ghostdsb](https://github.com/ghostdsb), [Brotchu](https://github.com/Brotchu)
 
