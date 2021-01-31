@@ -52,26 +52,15 @@ Garuda ships with a javascript client [garudajs](https://github.com/madclaws/gar
   
 
 ```elixir
-
-  
-
 def  deps  do
-
-  
-
 [
 
-{:garuda, "~> 0.2.0"},
+{:garuda, "~> 0.2.0"}
 
 ]
-
-  
-
 end
 
 ```
-
-  
 
 ### Demo
 
