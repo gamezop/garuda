@@ -248,6 +248,7 @@ defmodule Garuda.RoomManager.RoomDb do
             "rejoin" => false
           })
       end
+
     :ets.insert(@room_db_name, {room_pid, details})
     {:reply, "updated", state}
   end
@@ -279,6 +280,7 @@ defmodule Garuda.RoomManager.RoomDb do
             "recon_ref" => true,
             "rejoin" => false
           })
+
         :ets.insert(@room_db_name, {room_name, details})
         "ok"
 
@@ -297,6 +299,7 @@ defmodule Garuda.RoomManager.RoomDb do
     case player_count do
       0 ->
         GenServer.call(self(), {"delete_room", room_pid})
+
       _ ->
         details
     end

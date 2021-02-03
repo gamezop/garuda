@@ -33,6 +33,7 @@ defmodule Garuda.RoomManager do
         {RoomDb, []}
       ]
       |> List.flatten()
+
     create_room_ets()
     Supervisor.init(children, strategy: :one_for_one)
   end
@@ -44,7 +45,7 @@ defmodule Garuda.RoomManager do
     end
   end
 
-  defp create_room_ets() do
+  defp create_room_ets do
     # public, but apis are through RoomDb module
     :ets.new(:room_db, [:public, :named_table])
     :ets.insert(:room_db, {"channels", %{}})

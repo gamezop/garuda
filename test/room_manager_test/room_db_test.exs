@@ -20,6 +20,7 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "players" => %{"playerA" => %{"recon_ref" => true, "rejoin" => false}},
       "time" => :os.system_time(:milli_seconds)
     })
+
     [{_room_name, details} | _t] = :ets.lookup(:room_db, context[:tpid])
     assert details["match_id"] === "test_id"
   end
@@ -33,7 +34,7 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "time" => :os.system_time(:milli_seconds)
     })
 
-    _resp = RoomDb.on_room_join(context[:tpid], [player_id: "playerB"])
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
     [{_room_name, details} | _t] = :ets.lookup(:room_db, context[:tpid])
     assert details["players"]["playerB"]["rejoin"] === false
   end
@@ -47,8 +48,8 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "time" => :os.system_time(:milli_seconds)
     })
 
-    _resp = RoomDb.on_room_join(context[:tpid], [player_id: "playerB"])
-    resp = RoomDb.on_room_join(context[:tpid], [player_id: "playerB"])
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
+    resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
 
     assert resp === "already_exists"
   end
@@ -62,7 +63,7 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "time" => :os.system_time(:milli_seconds)
     })
 
-    _resp = RoomDb.on_room_join(context[:tpid], [player_id: "playerB"])
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
     channel_name = RoomDb.get_channel_name(context[:tpid])
     assert channel_name === "room_test_room:test_id"
   end
@@ -76,7 +77,7 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "time" => :os.system_time(:milli_seconds)
     })
 
-    _resp = RoomDb.on_room_join(context[:tpid], [player_id: "playerB"])
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
     RoomDb.on_channel_connection(:channel1, %{})
     [{_key, details} | _t] = :ets.lookup(:room_db, "channels")
 
@@ -92,7 +93,7 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "time" => :os.system_time(:milli_seconds)
     })
 
-    _resp = RoomDb.on_room_join(context[:tpid], [player_id: "playerB"])
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
     RoomDb.on_channel_terminate(:channel1)
     [{_key, details} | _t] = :ets.lookup(:room_db, "channels")
 
@@ -108,7 +109,7 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "time" => :os.system_time(:milli_seconds)
     })
 
-    _resp = RoomDb.on_room_join(context[:tpid], [player_id: "playerB"])
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
     # room_data = :ets.select(:room_db, [{{:"$1", :"$2"}, [is_pid: :"$1"], [:"$2"]}])
     # IO.puts(inspect room_data)
     stats = RoomDb.get_stats()
