@@ -18,7 +18,7 @@ The project focuses on providing a *game framework system*, *matchmaking*, *real
 
   
 
-The goal of the framework is to be have a standard frameowrk & matchmaking solution for all type of games. BEAM directly maps the use cases of a typical game server. So Let's build and run game servers, in a much more intuitive way.
+The goal of the framework is to be have a standard framework & matchmaking solution for all type of games. BEAM directly maps the use cases of a typical game server. So Let's build and run game servers, in a much more intuitive way.
 
 ### :warning:  This project is in alpha.
 
@@ -76,7 +76,7 @@ Dingo (bingo server, using Garuda) [source code](https://github.com/madclaws/Din
 
   
 
-## Contributors
+## Collaborators
 
 [ghostdsb](https://github.com/ghostdsb), [Brotchu](https://github.com/Brotchu)
 

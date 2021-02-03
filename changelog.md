@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0
+  - Documentation.
+  - Refactoring.
+  - Deploying the demo.
 ## 0.2.0-rc.3
   - Orwell restructured like live_dashboard.
   - Orwell Bug fixes + Refactoring
