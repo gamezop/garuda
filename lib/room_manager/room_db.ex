@@ -142,13 +142,18 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @impl true
   def handle_call({"delete_room", room_pid}, _from, state) do
-    [{_room_name, details} | _t] = :ets.lookup(@room_db_name, room_pid)
-    room_name = details["room_name"]
-    match_id = details["match_id"]
-    room_id = "#{room_name}:#{match_id}"
-    Matcher.delete_room(room_id)
-    :ets.delete(@room_db_name, room_pid)
-    {:reply, "ok", state}
+    case :ets.lookup(@room_db_name, room_pid) do
+      [{_room_name, details} | _t] ->
+        room_name = details["room_name"]
+        match_id = details["match_id"]
+        room_id = "#{room_name}:#{match_id}"
+        Matcher.delete_room(room_id)
+        :ets.delete(@room_db_name, room_pid)
+        {:reply, "ok", state}
+
+      _ ->
+        {:reply, "ok", state}
+    end
   end
 
   @impl true
@@ -223,13 +228,13 @@ defmodule Garuda.RoomManager.RoomDb do
     [{_room_name, details} | _t] = :ets.lookup(@room_db_name, room_pid)
 
     {popped_val, details} = pop_in(details["players"][player_id])
+    :ets.insert(@room_db_name, {room_pid, details})
+
     room_name = details["room_name"]
     match_id = details["match_id"]
     room_id = room_name <> ":" <> match_id
     Matcher.remove_player(room_id, player_id)
     manage_room_deletion(room_pid, details)
-    # Disposing the game-room, if no player in roomDb's room
-    # Or call on_leave on game-room.
     {:reply, popped_val, state}
   end
 
@@ -298,7 +303,7 @@ defmodule Garuda.RoomManager.RoomDb do
 
     case player_count do
       0 ->
-        GenServer.call(self(), {"delete_room", room_pid})
+        :ets.delete(@room_db_name, room_pid)
 
       _ ->
         details
