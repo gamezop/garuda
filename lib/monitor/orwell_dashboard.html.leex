@@ -1,7 +1,7 @@
 <nav class="navbar orwell-navbar">
       <div class="navbar-brand">
           <div class="navbar-item">
-              <p class="brand-text">Garuda</p>
+              <p class="brand-text">Orwell</p>
           </div>
       </div>
 </nav>
@@ -21,24 +21,26 @@
 </nav>
 <div class="dashboard-content">
         <div class="columns dashboard-head-columns">
-            <div class="column is-one-quarter dashboard-head-column">Room Id</div>
-            <div class="column is-one-quarter dashboard-head-column">Room Name</div>
-            <div class="column is-one-quarter dashboard-head-column">Time Elasped</div>
-            <div class="column is-one-quarter dashboard-head-column">Actions</div>
+            <div class="column is-one-fifth dashboard-head-column">Room Id</div>
+            <div class="column is-one-fifth dashboard-head-column">Room Name</div>
+            <div class="column is-one-fifth dashboard-head-column">Players</div>
+            <div class="column is-one-fifth dashboard-head-column">Time Elasped</div>
+            <div class="column is-one-fifth dashboard-head-column">Actions</div>
         </div>
     <%= for room <- @list_rooms do %>
         <div class="columns dashboard-columns">
-            <div class="column is-one-quarter dashboard-column"><%= room["match_id"] %></div>
-            <div class="column is-one-quarter dashboard-column"><%= room["room_name"] %></div>
-            <div class="column is-one-quarter dashboard-column"><%= room["time"] %></div>
-            <div class="column is-one-quarter dashboard-column room-buttons">
-                <button class="button is-rounded is-primary"
+            <div class="column is-one-fifth dashboard-column"><%= room["match_id"] %></div>
+            <div class="column is-one-fifth dashboard-column"><%= room["room_name"] %></div>
+            <div class="column is-one-fifth dashboard-column"><%= Enum.count(room["players"]) %></div>
+            <div class="column is-one-fifth dashboard-column"><%= room["time"] %></div>
+            <div class="column is-one-fifth dashboard-column room-buttons buttons">
+                <button class="button is-info is-small"
                     phx-click="inspect"
                     phx-value-name="<%= room["room_name"] %>"
                     phx-value-id="<%= room["match_id"] %>">
                     Inspect
                 </button>
-                <button class="button is-rounded is-danger"
+                <button class="button is-danger is-small"
                     phx-click="dispose"
                     phx-value-name="<%= room["room_name"] %>"
                     phx-value-id="<%= room["match_id"] %>">
