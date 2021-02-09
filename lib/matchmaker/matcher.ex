@@ -21,7 +21,7 @@ defmodule Garuda.MatchMaker.Matcher do
   "max_players" => 2
   } = match_details`
   """
-  @spec join_or_create(map()) :: String.t()
+  @spec join_or_create(map()) :: map()
   def join_or_create(match_details) do
     GenServer.call(__MODULE__, {"join_or_create", match_details})
   end
@@ -54,11 +54,11 @@ defmodule Garuda.MatchMaker.Matcher do
 
   @impl true
   def handle_call({"join_or_create", match_details}, _from, state) do
-    match_id =
+    match_response =
       is_valid_details?(match_details)
       |> handle_join_or_create(match_details)
 
-    {:reply, match_id, state}
+    {:reply, match_response, state}
   end
 
   @impl true
@@ -129,7 +129,7 @@ defmodule Garuda.MatchMaker.Matcher do
     end
   end
 
-  defp handle_join_or_create(false, _details), do: nil
+  defp handle_join_or_create(false, _details), do: %{"error" => "invalid_match_data"}
 
   defp get_available_public_rooms(room_name) do
     unlocked_rooms =
@@ -189,7 +189,11 @@ defmodule Garuda.MatchMaker.Matcher do
        }}
     )
 
-    match_id
+    %{"match_id" => match_id}
+  end
+
+  defp add_player_to_room(_room_name, _player_id, %{"locked" => true} = _details, _is_private) do
+    %{"error" => "no_match_found"}
   end
 
   defp add_player_to_room(room_name, player_id, details, is_private) do
@@ -208,6 +212,6 @@ defmodule Garuda.MatchMaker.Matcher do
        }}
     )
 
-    room_name |> String.split(":") |> List.last()
+    %{"match_id" => room_name |> String.split(":") |> List.last()}
   end
 end
