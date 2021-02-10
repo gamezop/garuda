@@ -1,16 +1,16 @@
 defmodule Garuda.RoomManager.RoomSheduler do
-  @moduledoc """
-  Monitors game-rooms and orchestrates communication between other room components, game-channels etc.
+  @moduledoc false
 
-  Main RoomSheduler tasks
-    * Monitor all the game-rooms that are created by the dynamic supervisors.
-    * Load-balancing the dynamic supervisors.
-    * Interface between monitor dashboard and RoomDb, (See `Garuda.RoomManager.RoomDb`).
-    * Interface between game-rooms and RoomDb.
+  # Monitors game-rooms and orchestrates communication between other room components, game-channels etc.
 
-  Basically RoomSheduler is the bridge between the game rooms and other core components
-  such as Monitor(`Garuda.Monitor`), Matchmaker(`Garuda.Matchmaker`) and RoomDb.
-  """
+  # Main RoomSheduler tasks
+  # * Monitor all the game-rooms that are created by the dynamic supervisors.
+  # * Load-balancing the dynamic supervisors.
+  # * Interface between monitor dashboard and RoomDb, (See `Garuda.RoomManager.RoomDb`).
+  # * Interface between game-rooms and RoomDb.
+
+  # Basically RoomSheduler is the bridge between the game rooms and other core components
+  # such as Monitor(`Garuda.Monitor`), Matchmaker(`Garuda.Matchmaker`) and RoomDb.
 
   use GenServer
   alias Garuda.RoomManager

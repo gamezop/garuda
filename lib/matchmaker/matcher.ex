@@ -1,8 +1,7 @@
 defmodule Garuda.MatchMaker.Matcher do
-  @moduledoc """
-  Manages the creation, updation and deletion of match rooms.
-  """
+  @moduledoc false
 
+  # Manages the creation, updation and deletion of match rooms.
   use GenServer
   ##################
 

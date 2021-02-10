@@ -2,10 +2,11 @@ defmodule Garuda.MixProject do
   @moduledoc false
   use Mix.Project
 
+  @version "0.2.1"
   def project do
     [
       app: :garuda,
-      version: "0.2.0",
+      version: @version,
       elixir: "~> 1.10",
       compilers: [:phoenix] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -29,7 +30,19 @@ defmodule Garuda.MixProject do
   defp docs do
     [
       logo: "logo.png",
-      groups_for_modules: groups_for_modules()
+      groups_for_modules: groups_for_modules(),
+      extra_section: "GUIDES",
+      extras: extras(),
+      main: "overview"
+    ]
+  end
+
+  defp extras do
+    [
+      "guides/overview.md",
+      "guides/server.md",
+      "guides/client.md",
+      "guides/monitoring.md"
     ]
   end
 
@@ -39,15 +52,6 @@ defmodule Garuda.MixProject do
         Garuda.GameSocket,
         Garuda.GameChannel,
         Garuda.GameRoom
-      ],
-      Matchmaker: [
-        Garuda.Matchmaker.Matcher
-      ],
-      RoomManager: [
-        Garuda.RoomManager.RoomSheduler,
-        Garuda.RoomManager,
-        Garuda.RoomManager.RoomDb,
-        Garuda.RoomManager.Records
       ]
     ]
   end

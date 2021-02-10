@@ -1,9 +1,9 @@
 defmodule Garuda.RoomManager.RoomDb do
-  @moduledoc """
-  Stores the info of all the game-rooms and functions to manage those data.
+  @moduledoc false
 
-  Orwell uses data from RoomDb, for rendering the live interactive dashboard
-  """
+  # Stores the info of all the game-rooms and functions to manage those data.
+  # Orwell uses data from RoomDb, for rendering the live interactive dashboard
+
   alias Garuda.MatchMaker.Matcher
   alias Garuda.RoomManager.Records
   use GenServer
