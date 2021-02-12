@@ -1,8 +1,6 @@
 defmodule Garuda.Matchmaker.MatchmakerSupervisor do
-  @moduledoc """
-  Supervises the core matchmaking process
-  """
-
+  @moduledoc false
+  # Supervises the core matchmaking process
   use Supervisor
   alias Garuda.MatchMaker.Matcher
 

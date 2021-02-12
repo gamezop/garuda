@@ -1,7 +1,6 @@
 defmodule Garuda.Monitor.DashboardData do
-  @moduledoc """
-    An interface to retrtive data btw RoomDb and Monitor dashboard
-  """
+  @moduledoc false
+
   alias Garuda.RoomManager.Records
 
   def get_room_state(room_id) do

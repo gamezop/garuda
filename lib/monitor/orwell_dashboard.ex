@@ -101,13 +101,15 @@ defmodule Garuda.Monitor.OrwellDashboard do
     assign(socket, :room_state, RoomDb.get_room_state(room_id) |> state_to_string)
   end
 
-  defp make_list_rooms(room_map) do
-    Map.keys(room_map)
-    |> Enum.map(fn x ->
-      room_map[x]
-      |> Map.put("pid", x)
-    end)
-    |> Enum.map(fn x -> time_diff(x) end)
+  defp make_list_rooms(room_list) do
+    # Map.keys(room_map)
+    # |> Enum.map(fn x ->
+    #   room_map[x]
+    #   |> Map.put("pid", x)
+    # end)
+    # |>
+    room_list
+    |> Enum.map(fn data -> time_diff(data) end)
   end
 
   defp state_to_string(statemap) do

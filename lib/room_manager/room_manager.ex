@@ -1,18 +1,18 @@
 defmodule Garuda.RoomManager do
-  @moduledoc """
-  Create and supervise the core room components.
+  @moduledoc false
 
-  The Core room components are,
-    * DynamicSupervisors - Creates and supervises game-rooms. See `DynamicSupervisor`
-    * RoomSheduler - Shedules the DynamicSupervisors, monitor the game-rooms etc. See `Garuda.RoomManager.RoomSheduler`
-    * RoomDb - Stores the info regarding the game-rooms. See `Garuda.RoomManager.RoomDb`.
+  # Create and supervise the core room components.
 
-  RoomManager creates and supervises all the dynamic supervisors, which in turn
-  supervises the actual game rooms.
+  # The Core room components are,
+  # * DynamicSupervisors - Creates and supervises game-rooms. See `DynamicSupervisor`
+  # * RoomSheduler - Shedules the DynamicSupervisors, monitor the game-rooms etc. See `Garuda.RoomManager.RoomSheduler`
+  # * RoomDb - Stores the info regarding the game-rooms. See `Garuda.RoomManager.RoomDb`.
 
-  No:of dynamic supervisors used in the game server can be configured by
-  adding `:max_sup` while starting GameManager. See `Garuda.GameManager`.
-  """
+  # RoomManager creates and supervises all the dynamic supervisors, which in turn
+  # supervises the actual game rooms.
+
+  # No:of dynamic supervisors used in the game server can be configured by
+  # adding `:max_sup` while starting GameManager. See `Garuda.GameManager`.
 
   use Supervisor
   alias Garuda.RoomManager.RoomDb
@@ -34,6 +34,7 @@ defmodule Garuda.RoomManager do
       ]
       |> List.flatten()
 
+    create_room_ets()
     Supervisor.init(children, strategy: :one_for_one)
   end
 
@@ -42,5 +43,11 @@ defmodule Garuda.RoomManager do
     for count <- 1..max_dynamic_sup do
       {DynamicSupervisor, strategy: :one_for_one, name: :"dynamic_sup_#{count}"}
     end
+  end
+
+  defp create_room_ets do
+    # public, but apis are through RoomDb module
+    :ets.new(:room_db, [:public, :named_table])
+    :ets.insert(:room_db, {"channels", %{}})
   end
 end

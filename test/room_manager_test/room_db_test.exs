@@ -1,19 +1,15 @@
 defmodule GarudaTest.RoomManager.RoomDbTest do
   @moduledoc false
   use ExUnit.Case
-
-  alias Garuda.RoomManager.Records
   alias Garuda.RoomManager.RoomDb
-  alias GarudaTest.RoomManager.TestGenserver
 
   setup do
-    {:ok, pid} = RoomDb.start_link()
-    {:ok, test_pid} = TestGenserver.start_link()
-    {:ok, [pid: pid, tpid: test_pid]}
-  end
+    :ets.new(:room_db, [:public, :named_table])
+    :ets.insert(:room_db, {"channels", %{}})
 
-  test "initial state to room db", context do
-    assert :sys.get_state(context[:pid]) === %{"channels" => %{}, "rooms" => %{}}
+    {:ok, _pid} = RoomDb.start_link()
+    tpid = spawn(fn -> 1 + 3 end)
+    {:ok, [tpid: tpid]}
   end
 
   test " save room state ", context do
@@ -21,55 +17,123 @@ defmodule GarudaTest.RoomManager.RoomDbTest do
       "ref" => nil,
       "room_name" => "test_room",
       "match_id" => "test_id",
+      "players" => %{"playerA" => %{"recon_ref" => true, "rejoin" => false}},
       "time" => :os.system_time(:milli_seconds)
     })
 
-    assert :sys.get_state(context[:pid])["rooms"][context[:tpid]]["match_id"] ===
-             "test_id"
+    [{_room_name, details} | _t] = :ets.lookup(:room_db, context[:tpid])
+    assert details["match_id"] === "test_id"
   end
 
-  test "new channel connection", context do
-    RoomDb.on_channel_connection(context[:tpid], %{})
-    assert :sys.get_state(context[:pid])["channels"][context[:tpid]] === %{}
-  end
-
-  test "on channel disconnection", context do
-    RoomDb.on_channel_connection(context[:tpid], %{})
-    RoomDb.on_channel_terminate(context[:tpid])
-    assert :sys.get_state(context[:pid])["channels"][context[:tpid]] === nil
-  end
-
-  test "get stats", context do
+  test "on_room join", context do
     RoomDb.save_init_room_state(context[:tpid], %{
       "ref" => nil,
       "room_name" => "test_room",
       "match_id" => "test_id",
+      "players" => %{"playerA" => %{"recon_ref" => true, "rejoin" => false}},
       "time" => :os.system_time(:milli_seconds)
     })
 
-    RoomDb.on_channel_connection(context[:tpid], %{})
-
-    assert %{"channel_count" => _conns_info, "room_count" => _rooms_info, "rooms" => _room_info} =
-             RoomDb.get_stats()
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
+    [{_room_name, details} | _t] = :ets.lookup(:room_db, context[:tpid])
+    assert details["players"]["playerB"]["rejoin"] === false
   end
 
-  test "get channel name", context do
+  test "duplicate on_room join", context do
     RoomDb.save_init_room_state(context[:tpid], %{
       "ref" => nil,
       "room_name" => "test_room",
       "match_id" => "test_id",
+      "players" => %{"playerA" => %{"recon_ref" => true, "rejoin" => false}},
       "time" => :os.system_time(:milli_seconds)
     })
 
-    assert RoomDb.get_channel_name(context[:tpid]) === "room_test_room:test_id"
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
+    resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
+
+    assert resp === "already_exists"
   end
 
-  test "get game-room state", _context do
-    start_supervised({Registry, keys: :unique, name: GarudaRegistry})
-    name = Records.via_tuple("test_room")
-    {:ok, _test_pid2} = TestGenserver.start_link(name: name)
-    assert %{} === RoomDb.get_room_state(name)
+  test "get_channel_name", context do
+    RoomDb.save_init_room_state(context[:tpid], %{
+      "ref" => nil,
+      "room_name" => "test_room",
+      "match_id" => "test_id",
+      "players" => %{"playerA" => %{"recon_ref" => true, "rejoin" => false}},
+      "time" => :os.system_time(:milli_seconds)
+    })
+
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
+    channel_name = RoomDb.get_channel_name(context[:tpid])
+    assert channel_name === "room_test_room:test_id"
   end
+
+  test "on_channel_connection", context do
+    RoomDb.save_init_room_state(context[:tpid], %{
+      "ref" => nil,
+      "room_name" => "test_room",
+      "match_id" => "test_id",
+      "players" => %{"playerA" => %{"recon_ref" => true, "rejoin" => false}},
+      "time" => :os.system_time(:milli_seconds)
+    })
+
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
+    RoomDb.on_channel_connection(:channel1, %{})
+    [{_key, details} | _t] = :ets.lookup(:room_db, "channels")
+
+    assert Enum.count(details) === 1
+  end
+
+  test "on_channel_terminate", context do
+    RoomDb.save_init_room_state(context[:tpid], %{
+      "ref" => nil,
+      "room_name" => "test_room",
+      "match_id" => "test_id",
+      "players" => %{"playerA" => %{"recon_ref" => true, "rejoin" => false}},
+      "time" => :os.system_time(:milli_seconds)
+    })
+
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
+    RoomDb.on_channel_terminate(:channel1)
+    [{_key, details} | _t] = :ets.lookup(:room_db, "channels")
+
+    assert Enum.count(details) === 0
+  end
+
+  test "get_stats", context do
+    RoomDb.save_init_room_state(context[:tpid], %{
+      "ref" => nil,
+      "room_name" => "test_room",
+      "match_id" => "test_id",
+      "players" => %{"playerA" => %{"recon_ref" => true, "rejoin" => false}},
+      "time" => :os.system_time(:milli_seconds)
+    })
+
+    _resp = RoomDb.on_room_join(context[:tpid], player_id: "playerB")
+    # room_data = :ets.select(:room_db, [{{:"$1", :"$2"}, [is_pid: :"$1"], [:"$2"]}])
+    # IO.puts(inspect room_data)
+    stats = RoomDb.get_stats()
+    refute stats === %{}
+  end
+
+  #### This test have matchmaker ets dependency.
+  # test "on_player_leave", context do
+  #   RoomDb.save_init_room_state(context[:tpid], %{
+  #     "ref" => nil,
+  #     "room_name" => "test_room",
+  #     "match_id" => "test_id",
+  #     "players" => %{"playerA" => %{"recon_ref" => true, "rejoin" => false}},
+  #     "time" => :os.system_time(:milli_seconds)
+  #   })
+
+  #   _resp = RoomDb.on_room_join(context[:tpid], [player_id: "playerB"])
+  #   RoomDb.on_player_leave(context[:tpid], "playerA")
+  #   RoomDb.on_player_leave(context[:tpid], "playerB")
+
+  #   data = :ets.lookup(:room_db, "channels")
+
+  #   assert data === []
+  # end
 end
 
 defmodule GarudaTest.RoomManager.TestGenserver do

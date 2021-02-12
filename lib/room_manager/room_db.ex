@@ -1,13 +1,14 @@
 defmodule Garuda.RoomManager.RoomDb do
-  @moduledoc """
-  Stores the info of all the game-rooms and functions to manage those data.
+  @moduledoc false
 
-  Orwell uses data from RoomDb, for rendering the live interactive dashboard
-  """
+  # Stores the info of all the game-rooms and functions to manage those data.
+  # Orwell uses data from RoomDb, for rendering the live interactive dashboard
+
   alias Garuda.MatchMaker.Matcher
   alias Garuda.RoomManager.Records
   use GenServer
 
+  @room_db_name :room_db
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
@@ -87,7 +88,7 @@ defmodule Garuda.RoomManager.RoomDb do
     Returns overall game server info, required for Monitoring
   """
   def get_stats do
-    GenServer.call(__MODULE__, :get_stats)
+    GenServer.call(__MODULE__, "get_stats")
   end
 
   @spec get_room_state(String.t()) :: map()
@@ -97,7 +98,7 @@ defmodule Garuda.RoomManager.RoomDb do
     * `room_id` - Unique combination of room_name + ":" + room_id., ex ("tictactoe:ACFBEBW")
   """
   def get_room_state(room_id) do
-    GenServer.call(__MODULE__, {:get_room_state, room_id})
+    GenServer.call(__MODULE__, {"get_room_state", room_id})
   end
 
   @doc """
@@ -136,44 +137,59 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @impl true
   def init(_opts) do
-    {:ok, %{"rooms" => %{}, "channels" => %{}}}
+    {:ok, %{}}
   end
 
   @impl true
   def handle_call({"delete_room", room_pid}, _from, state) do
-    room_name = state["rooms"][room_pid]["room_name"]
-    match_id = state["rooms"][room_pid]["match_id"]
-    # IO.puts("#{room_name}:#{match_id}")
-    room_id = "#{room_name}:#{match_id}"
-    Matcher.delete_room(room_id)
-    {popped_val, state} = pop_in(state["rooms"][room_pid])
-    {:reply, popped_val, state}
+    case :ets.lookup(@room_db_name, room_pid) do
+      [{_room_name, details} | _t] ->
+        room_name = details["room_name"]
+        match_id = details["match_id"]
+        room_id = "#{room_name}:#{match_id}"
+        Matcher.delete_room(room_id)
+        :ets.delete(@room_db_name, room_pid)
+        {:reply, "ok", state}
+
+      _ ->
+        {:reply, "ok", state}
+    end
   end
 
   @impl true
   def handle_call({"save_room", {room_pid, info}}, _from, state) do
-    state = put_in(state["rooms"][room_pid], info)
+    :ets.insert(@room_db_name, {room_pid, info})
     {:reply, "ok", state}
   end
 
   @impl true
   def handle_call({"channel_leave", channel_pid}, _from, state) do
-    {popped_val, state} = pop_in(state["channels"][channel_pid])
+    [{_key, details} | _t] = :ets.lookup(@room_db_name, "channels")
+    {popped_val, details} = pop_in(details[channel_pid])
+    :ets.insert(@room_db_name, {"channels", details})
     {:reply, popped_val, state}
   end
 
   @impl true
   def handle_call({"channel_join", {channel_pid, _info}}, _from, state) do
-    state = put_in(state["channels"][channel_pid], %{})
+    [{_key, details} | _t] = :ets.lookup(@room_db_name, "channels")
+    details = put_in(details[channel_pid], %{})
+    :ets.insert(@room_db_name, {"channels", details})
     {:reply, "ok", state}
   end
 
   @impl true
-  def handle_call(:get_stats, _from, state) do
+  def handle_call("get_stats", _from, state) do
+    [{_key, details} | _t] = :ets.lookup(@room_db_name, "channels")
+
+    # fun = :ets.fun2ms(fn {key, val} when is_pid(key) -> val end)
+    # fetching data of those rows, which have pid as keys.
+    room_data = :ets.select(@room_db_name, [{{:"$1", :"$2"}, [is_pid: :"$1"], [:"$2"]}])
+
     stats = %{
-      "channel_count" => Map.keys(state["channels"]) |> Enum.count(),
-      "room_count" => Map.keys(state["rooms"]) |> Enum.count(),
-      "rooms" => state["rooms"]
+      "channel_count" => Map.keys(details) |> Enum.count(),
+      "room_count" => Enum.count(room_data),
+      "rooms" => room_data
     }
 
     {:reply, stats, state}
@@ -181,13 +197,14 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @impl true
   def handle_call({"get_channel_name", room_pid}, _from, state) do
-    room_name = state["rooms"][room_pid]["room_name"]
-    match_id = state["rooms"][room_pid]["match_id"]
+    [{_room_name, details} | _t] = :ets.lookup(@room_db_name, room_pid)
+    room_name = details["room_name"]
+    match_id = details["match_id"]
     {:reply, "room_" <> room_name <> ":" <> match_id, state}
   end
 
   @impl true
-  def handle_call({:get_room_state, room_id}, _from, state) do
+  def handle_call({"get_room_state", room_id}, _from, state) do
     room_state =
       case Records.is_process_registered(room_id) do
         true -> :sys.get_state(Records.via_tuple(room_id))
@@ -201,85 +218,95 @@ defmodule Garuda.RoomManager.RoomDb do
   def handle_call({"room_join", room_pid, opts}, _from, state) do
     player_id = Keyword.get(opts, :player_id)
 
-    {status, state} = add_to_room(state["rooms"][room_pid], player_id, room_pid, state)
+    status = add_to_room(:ets.lookup(@room_db_name, room_pid), player_id)
 
     {:reply, status, state}
   end
 
   @impl true
   def handle_call({"room_left", room_pid, player_id}, _from, state) do
-    {popped_val, state} = pop_in(state["rooms"][room_pid]["players"][player_id])
-    room_name = state["rooms"][room_pid]["room_name"]
-    match_id = state["rooms"][room_pid]["match_id"]
+    [{_room_name, details} | _t] = :ets.lookup(@room_db_name, room_pid)
+
+    {popped_val, details} = pop_in(details["players"][player_id])
+    :ets.insert(@room_db_name, {room_pid, details})
+
+    room_name = details["room_name"]
+    match_id = details["match_id"]
     room_id = room_name <> ":" <> match_id
     Matcher.remove_player(room_id, player_id)
-    state = manage_room_deletion(room_pid, state)
-    # Disposing the game-room, if no player in roomDb's room
-    # Or call on_leave on game-room.
+    manage_room_deletion(room_pid, details)
     {:reply, popped_val, state}
   end
 
   @impl true
   def handle_call({"update_timer_ref", room_pid, player_id, ref}, _from, state) do
-    state =
+    [{_room_name, details} | _t] = :ets.lookup(@room_db_name, room_pid)
+
+    details =
       case ref do
         ref when is_reference(ref) ->
-          put_in(state["rooms"][room_pid]["players"][player_id]["recon_ref"], ref)
+          put_in(details["players"][player_id]["recon_ref"], ref)
 
         _ ->
-          put_in(state["rooms"][room_pid]["players"][player_id], %{
+          put_in(details["players"][player_id], %{
             "recon_ref" => ref,
             "rejoin" => false
           })
       end
 
+    :ets.insert(@room_db_name, {room_pid, details})
     {:reply, "updated", state}
   end
 
   @impl true
   def handle_call({"get_timer_ref", room_pid, player_id}, _from, state) do
-    ref = state["rooms"][room_pid]["players"][player_id]["recon_ref"]
+    [{_room_name, details} | _t] = :ets.lookup(@room_db_name, room_pid)
+
+    ref = details["players"][player_id]["recon_ref"]
     {:reply, ref, state}
   end
 
   @impl true
   def handle_call({"has_rejoined", room_pid, player_id}, _from, state) do
-    status = state["rooms"][room_pid]["players"][player_id]["rejoin"]
+    [{_room_name, details} | _t] = :ets.lookup(@room_db_name, room_pid)
+
+    status = details["players"][player_id]["rejoin"]
     {:reply, status, state}
   end
 
   ## helper
-  defp add_to_room(nil, _player_id, _room_pid, state), do: {"error", state}
+  defp add_to_room([], _player_id), do: "error"
 
-  defp add_to_room(_players, player_id, room_pid, state) do
-    case state["rooms"][room_pid]["players"][player_id] do
+  defp add_to_room([{room_name, details} | _t], player_id) do
+    case details["players"][player_id] do
       nil ->
-        state =
-          put_in(state["rooms"][room_pid]["players"][player_id], %{
+        details =
+          put_in(details["players"][player_id], %{
             "recon_ref" => true,
             "rejoin" => false
           })
 
-        {"ok", state}
+        :ets.insert(@room_db_name, {room_name, details})
+        "ok"
 
       _ ->
-        state = put_in(state["rooms"][room_pid]["players"][player_id]["rejoin"], true)
-        {"already_exists", state}
+        details = put_in(details["players"][player_id]["rejoin"], true)
+        :ets.insert(@room_db_name, {room_name, details})
+        "already_exists"
     end
   end
 
-  def manage_room_deletion(room_pid, state) do
+  defp manage_room_deletion(room_pid, details) do
     player_count =
-      state["rooms"][room_pid]["players"]
+      details["players"]
       |> Enum.count()
 
     case player_count do
       0 ->
-        {_popped_val, state} = pop_in(state["rooms"][room_pid])
-        state
+        :ets.delete(@room_db_name, room_pid)
 
       _ ->
-        state
+        details
     end
   end
 end
