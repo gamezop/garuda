@@ -14,6 +14,7 @@ defmodule Garuda.MixProject do
       docs: docs(),
       name: "Garuda",
       package: package(),
+      aliases: aliases(),
       description: """
         A multiplayer game server framework for phoenix.
       """
@@ -25,6 +26,16 @@ defmodule Garuda.MixProject do
     [
       extra_applications: [:logger]
     ]
+  end
+
+  defp aliases do
+    [docs: ["docs", &copy_images/1]]
+  end
+
+  defp copy_images(_) do
+    File.cp_r("source", "destination", fn source, destination ->
+      IO.gets("Overwriting #{destination} by #{source}. Type y to confirm. ") == "y\n"
+    end)
   end
 
   defp docs do

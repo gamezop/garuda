@@ -2,15 +2,17 @@
 
 This section contains the details on how to use Garuda for our games in phoenix.
 
-## Overview.
-Garuda framework have 3 parts.
+## Matchmaking system
+  Matchmaking system is inbuilt into the core, so developers doesn't have to know any api to work with it. For every room created, Garuda will create a unique matchId for it. If we have to use custom matchId, then we can specify it from [client side](client.html).
+## Framework system
+  Framework has 3 parts
   - [GameSocket](Garuda.GameSocket.html) - Extends [Phoenix.Socket](https://hexdocs.pm/phoenix/Phoenix.Socket.html) with extra game behaviours.
   - [GameChannel](Garuda.GameChannel.html) - Extends [Phoenix.Channel](https://hexdocs.pm/phoenix/Phoenix.Channel.html) with extra game behaviours.
   - [GameRoom](Garuda.GameRoom.html) - Extends [GenServer](https://hexdocs.pm/elixir/GenServer.html) with extra game behaviours.
 
 
 
-### GameSocket
+#### GameSocket
  In `user_socket.ex`, we can do
       defmodule TictactoePhxWeb.UserSocket do
         use Garuda.GameSocket
@@ -23,7 +25,7 @@ Garuda framework have 3 parts.
  We are specifying the name of our game, the GameChannel (where we handle the events), and the GameRoom where the core gameplay logic should happen.
  For more details, go through [GameSocket](Garuda.GameSocket.html) module.
 
-### GameChannel
+#### GameChannel
     defmodule TictactoePhxWeb.TictactoeChannel do
         use Garuda.GameChannel
 
@@ -56,4 +58,24 @@ Garuda framework have 3 parts.
  We can use all the other callbacks in phoenix channels, here too. Like `handle_in/3`, `handle_out/3` etc.
 
  For more details, go through [GameChannel](Garuda.GameChannel.html) module.
-### GameRoom
+#### GameRoom
+    defmodule TictactoePhx.TictactoeRoom do
+        use Garuda.GameRoom, expiry: 120_000
+        def create(_opts) do
+          # Return the initial game state.
+          gamestate
+        end
+
+        def leave(player_id, game_state) do
+          # handle player leaving.
+          {:ok, gamestate}
+        end
+    end
+
+  GameRooms are extended genservers, where our core gameplay logic resides.
+  We don't have to use Genserver functions like `start_link/3` or `init/2`.
+  `init/2` is replaced by `create/1`. Rest everything works like genserver.
+  For more detauls, go through [GameRoom](Garuda.GameRoom.html)
+## Monitoring system
+Real-time monitoring of game-server is first-class in Garuda.
+Configuring monitoring is covered here, [Realtime-monitoring](monitoring.html)

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+  - Fault-tolerant RoomDb.
+  - Adding current players in a room in orwell (monitor dashboard).
+  - Handling MatchId exists case in matchmaker.
+  - Guides for using Garuda in a project.
 ## 0.2.0
   - Documentation.
   - Refactoring.
