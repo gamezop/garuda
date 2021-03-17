@@ -2,6 +2,18 @@
 
 This section contains the details on how to use Garuda for our games in phoenix.
 
+## Adding GameManager
+  GameManager is the root supervisor for all the systems mentioned below.
+  Basically we have to add this supervisor module to the `application.ex` of
+  a Phoenix project as a child inside the start function.
+
+  Add like below, if we dont want to pass extra options.
+      Garuda.GameManager
+  or, we have to add GameManager like,
+      {Garuda.GameManager, max_sup: 10}
+  
+  For more details, go through [GameManager](Garuda.GameManager.html) module.
+
 ## Matchmaking system
   Matchmaking system is inbuilt into the core, so developers doesn't have to know any api to work with it. For every room created, Garuda will create a unique matchId for it. If we have to use custom matchId, then we can specify it from [client side](client.html).
 ## Framework system
