@@ -108,7 +108,7 @@ defmodule Garuda.GameChannel do
         [_namespace, room_id] = String.split(socket.topic, "_")
 
         if Records.is_process_registered(room_id) do
-          GenServer.call(id(socket), {"on_rejoin", socket.assigns.player_id})
+          GenServer.call(rid(socket), {"on_rejoin", socket.assigns.player_id})
         end
 
         apply(__MODULE__, :on_rejoin, [params, socket])
@@ -120,7 +120,7 @@ defmodule Garuda.GameChannel do
         [_namespace, room_id] = String.split(socket.topic, "_")
 
         if Records.is_process_registered(room_id) do
-          GenServer.call(id(socket), {"on_channel_leave", socket.assigns.player_id, reason})
+          GenServer.call(rid(socket), {"on_channel_leave", socket.assigns.player_id, reason})
         end
       end
     end
@@ -130,7 +130,7 @@ defmodule Garuda.GameChannel do
   Returns the process id of game-room
     * socket - socket state of game-channel
   """
-  def id(socket) do
+  def rid(socket) do
     [_namespace, room_id] = String.split(socket.topic, "_")
     Records.via_tuple(room_id)
   end

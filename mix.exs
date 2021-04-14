@@ -2,7 +2,7 @@ defmodule Garuda.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "0.2.2"
+  @version "0.2.3"
   def project do
     [
       app: :garuda,
@@ -82,6 +82,7 @@ defmodule Garuda.MixProject do
       {:jason, "~> 1.0"},
       {:phoenix_live_view, "~> 0.12.0 or ~> 0.14.4 or ~> 0.15.0"},
       {:uuid, "~> 1.1.8"},
+      {:msgpax, "~> 2.0"},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.22", only: :dev, runtime: false}
     ]

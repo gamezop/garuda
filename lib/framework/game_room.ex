@@ -29,6 +29,9 @@ defmodule Garuda.GameRoom do
   create the game-room.
 
   We can setup the inital gamestate by returning game_state, where game_state is any erlang term.
+  `opts` is a keyword list containing details about room and player.
+  ex: `[room_id: "bingo:e6cf6669", player_id: "bingo_anon_759", max_players: 2]`
+
   Note: `create` is called only once.
   """
   @callback create(opts :: term()) :: game_state :: term()
