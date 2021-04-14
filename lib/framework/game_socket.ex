@@ -24,8 +24,14 @@ defmodule Garuda.GameSocket do
       Phoenix.Socket.channel("garuda_matchmaker:*", Garuda.MatchMakerChannel)
 
       def connect(params, socket, _connect_info) do
-        {:ok, assign(socket, :player_id, params["playerId"])}
+        socket =
+          Map.put(socket, :serializer, Garuda.Utils.MsgpaxSerializer)
+          |> assign(:player_id, params["playerId"])
+
+        {:ok, socket}
       end
+
+      def id(socket), do: "users_socket:#{socket.assigns.player_id}"
     end
   end
 

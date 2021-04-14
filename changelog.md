@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3
+  - Inbuilt msgpack serialization support
+  - included user_socket's `id` inside garuda.
+  - changed the `id` function in game_channel to `rid`.
+  - More docs.
 ## 0.2.1
   - Fault-tolerant RoomDb.
   - Adding current players in a room in orwell (monitor dashboard).
