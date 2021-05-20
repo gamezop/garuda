@@ -73,7 +73,7 @@ defmodule Garuda.GameChannel do
             Logger.metadata(room_id: room_id)
           end
 
-          [room_name, match_id] = String.split(room_id, ":")
+          [room_name, match_id] = String.split(room_id, ":", parts: 2)
 
           status =
             RoomSheduler.create_room(socket.assigns["#{room_name}_room_module"], room_id,
@@ -105,7 +105,7 @@ defmodule Garuda.GameChannel do
       end
 
       def handle_info({"garuda_after_rejoin", params}, socket) do
-        [_namespace, room_id] = String.split(socket.topic, "_")
+        [_namespace, room_id] = String.split(socket.topic, "_", parts: 2)
 
         if Records.is_process_registered(room_id) do
           GenServer.call(rid(socket), {"on_rejoin", socket.assigns.player_id})
@@ -117,7 +117,7 @@ defmodule Garuda.GameChannel do
 
       def terminate(reason, socket) do
         RoomDb.on_channel_terminate(socket.channel_pid)
-        [_namespace, room_id] = String.split(socket.topic, "_")
+        [_namespace, room_id] = String.split(socket.topic, "_", parts: 2)
 
         if Records.is_process_registered(room_id) do
           GenServer.call(rid(socket), {"on_channel_leave", socket.assigns.player_id, reason})
@@ -131,7 +131,7 @@ defmodule Garuda.GameChannel do
     * socket - socket state of game-channel
   """
   def rid(socket) do
-    [_namespace, room_id] = String.split(socket.topic, "_")
+    [_namespace, room_id] = String.split(socket.topic, "_", parts: 2)
     Records.via_tuple(room_id)
   end
 end

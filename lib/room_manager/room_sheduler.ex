@@ -161,7 +161,7 @@ defmodule Garuda.RoomManager.RoomSheduler do
     # Handles the creation of a game room
     room_id = Keyword.get(opts, :room_id)
     player_id = Keyword.get(opts, :player_id)
-    [room_name, match_id] = String.split(room_id, ":")
+    [room_name, match_id] = String.split(room_id, ":", parts: 2)
     add_room_to_state(pid, room_name, match_id, player_id)
     "ok"
   end

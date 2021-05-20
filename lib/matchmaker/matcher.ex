@@ -106,7 +106,9 @@ defmodule Garuda.MatchMaker.Matcher do
       room_list ->
         [room_name | _t] = List.first(room_list)
         [{_room_name, details} | _t] = :ets.lookup(:matcher_table, room_name)
-        add_player_to_room(room_name, player_id, details, false)
+
+        is_id_exists?(details["players"], player_id)
+        |> add_player_to_room(room_name, player_id, details, false)
     end
   end
 
@@ -124,7 +126,8 @@ defmodule Garuda.MatchMaker.Matcher do
         create_new_room(room_name, match_id, player_id, max_players, true)
 
       [{room_name, details} | _t] ->
-        add_player_to_room(room_name, player_id, details, true)
+        is_id_exists?(details["players"], player_id)
+        |> add_player_to_room(room_name, player_id, details, true)
     end
   end
 
@@ -191,11 +194,22 @@ defmodule Garuda.MatchMaker.Matcher do
     %{"match_id" => match_id}
   end
 
-  defp add_player_to_room(_room_name, _player_id, %{"locked" => true} = _details, _is_private) do
+  @spec add_player_to_room(boolean(), String.t(), String.t(), map(), boolean()) :: map()
+  defp add_player_to_room(
+         _is_id_exists,
+         _room_name,
+         _player_id,
+         %{"locked" => true} = _details,
+         _is_private
+       ) do
     %{"error" => "no_match_found"}
   end
 
-  defp add_player_to_room(room_name, player_id, details, is_private) do
+  defp add_player_to_room(true, _room_name, _player_id, _details, _is_private) do
+    %{"error" => "id_exists"}
+  end
+
+  defp add_player_to_room(false, room_name, player_id, details, is_private) do
     # update the player list
     updated_player_list = [player_id | details["players"]]
     is_room_lock = Enum.count(updated_player_list) === details["max_players"]
@@ -212,5 +226,12 @@ defmodule Garuda.MatchMaker.Matcher do
     )
 
     %{"match_id" => room_name |> String.split(":") |> List.last()}
+  end
+
+  defp is_id_exists?(player_list, player_id) do
+    case Enum.find(player_list, fn id -> id === player_id end) do
+      nil -> false
+      _ -> true
+    end
   end
 end

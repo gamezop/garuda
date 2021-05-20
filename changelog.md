@@ -1,5 +1,7 @@
 # Changelog
-
+## 0.2.4
+  - Prevents duplicate joining in matchmaker lobby
+  - Allows room_ids with underscores.
 ## 0.2.3
   - Inbuilt msgpack serialization support
   - included user_socket's `id` inside garuda.

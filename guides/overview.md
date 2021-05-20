@@ -39,7 +39,7 @@ Garuda leverages phoenix framework completely, should be used in a phoenix proje
 
 def  deps  do
   [
-    {:garuda, "~> 0.2.3"}
+    {:garuda, "~> 0.2.4"}
   ]
 end
 
