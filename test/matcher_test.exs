@@ -82,4 +82,15 @@ defmodule GarudaTest.MatcherTest do
     room_list = :ets.lookup(:matcher_table, room_id)
     assert Enum.count(room_list) === 0
   end
+
+  test "rejecting duplicate playerIds", context do
+    details = context[:details]
+    details = put_in(details["max_players"], 2)
+    Matcher.join_or_create(details)
+    details = put_in(details["player_id"], "Pw")
+    Matcher.join_or_create(details)
+    [{_room_id, details} | _t] = :ets.tab2list(:matcher_table)
+    players_list = details["players"]
+    ^players_list = Enum.uniq(players_list)
+  end
 end

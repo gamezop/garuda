@@ -53,7 +53,7 @@ Garuda ships with a javascript client [garudajs](https://github.com/madclaws/gar
 
 def  deps  do
   [
-    {:garuda, "~> 0.2.3"}
+    {:garuda, "~> 0.2.4"}
   ]
 end
 
