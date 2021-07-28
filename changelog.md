@@ -1,4 +1,6 @@
 # Changelog
+## 0.2.5
+  - Real-time dashboard now supports `struct` game-state, and also shows error reason for unsupported game-states types instead of crashing.
 ## 0.2.4
   - Prevents duplicate joining in matchmaker lobby
   - Allows room_ids with underscores.

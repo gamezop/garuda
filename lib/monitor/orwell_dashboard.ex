@@ -112,9 +112,19 @@ defmodule Garuda.Monitor.OrwellDashboard do
     |> Enum.map(fn data -> time_diff(data) end)
   end
 
-  defp state_to_string(statemap) do
-    Jason.encode!(statemap, pretty: true)
+  defp state_to_string(statemap) when is_struct(statemap) do
+    Map.from_struct(statemap)
+    |> Jason.encode(pretty: true)
+    |> process_encoding()
   end
+
+  defp state_to_string(statemap) do
+    Jason.encode(statemap, pretty: true)
+    |> process_encoding()
+  end
+
+  defp process_encoding({:ok, state_string}), do: state_string
+  defp process_encoding(_error), do: "Encoding Error, use supported state types"
 
   defp time_diff(room_stats) do
     seconds = (:os.system_time(:milli_seconds) - room_stats["time"]) |> div(1000)
