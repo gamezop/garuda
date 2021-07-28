@@ -20,7 +20,6 @@ The project focuses on providing a *game framework system*, *matchmaking*, *real
 
 The goal of the framework is to be have a standard framework & matchmaking solution for all type of games. BEAM directly maps the use cases of a typical game server. So Let's build and run game servers, in a much more intuitive way.
 
-### :warning:  This project is in beta.
 
 Current feature list.
 
@@ -53,7 +52,7 @@ Garuda ships with a javascript client [garudajs](https://github.com/madclaws/gar
 
 def  deps  do
   [
-    {:garuda, "~> 0.2.4"}
+    {:garuda, "~> 0.2.5"}
   ]
 end
 
