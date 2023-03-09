@@ -1,4 +1,6 @@
 # Changelog
+## 0.3.0
+  - Upgraded phoenix versions and use live_session
 ## 0.2.5
   - Real-time dashboard now supports `struct` game-state, and also shows error reason for unsupported game-states types instead of crashing.
 ## 0.2.4

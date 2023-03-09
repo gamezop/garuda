@@ -15,6 +15,7 @@ defmodule Garuda.Orwell.LayoutView do
   def render("app.css", _), do: @app_css
 
   def live_socket_path(conn) do
+    conn |> inspect(label: "LSPATHSS")
     [Enum.map(conn.script_name, &["/" | &1]) | conn.private.live_socket_path]
   end
 end

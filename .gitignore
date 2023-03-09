@@ -33,3 +33,5 @@ assets/node_modules/
 # this depending on your deployment strategy.
 
 .elixir_ls/
+
+/.vscode/

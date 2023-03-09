@@ -2,13 +2,13 @@ defmodule Garuda.MixProject do
   @moduledoc false
   use Mix.Project
 
-  @version "0.2.5"
+  @version "0.3.0"
   def project do
     [
       app: :garuda,
       version: @version,
       elixir: "~> 1.10",
-      compilers: [:phoenix] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: docs(),
@@ -77,10 +77,12 @@ defmodule Garuda.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix, "~> 1.5.3"},
-      {:phoenix_html, "~> 2.14.1 or ~> 2.15"},
+      {:phoenix, "~> 1.6.8"},
+      {:phoenix_view, "~> 2.0"},
+      {:phoenix_html, "~> 3.3.1"},
       {:jason, "~> 1.0"},
-      {:phoenix_live_view, "~> 0.12.0 or ~> 0.14.4 or ~> 0.15.0"},
+      {:phoenix_live_view, "~> 0.18.3"},
+      {:phoenix_live_dashboard, "~> 0.7.2"},
       {:uuid, "~> 1.1.8"},
       {:msgpax, "~> 2.0"},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
