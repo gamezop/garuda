@@ -42,7 +42,7 @@ Current feature list.
 
 ### Client Side Support.
 
-Garuda ships with a javascript client [garudajs](https://github.com/madclaws/garudajs), which allows easy communication with the server (This also leverages [phoenixjs](https://hexdocs.pm/phoenix/js/)).
+Garuda ships with a javascript client [garudajs](https://github.com/gamezop/garudajs), which allows easy communication with the server (This also leverages [phoenixjs](https://hexdocs.pm/phoenix/js/)).
 
   
 
