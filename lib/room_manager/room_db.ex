@@ -197,6 +197,8 @@ defmodule Garuda.RoomManager.RoomDb do
 
   @impl true
   def handle_call({"get_channel_name", room_pid}, _from, state) do
+    room_pid |> IO.inspect(label: 1)
+    state |> IO.inspect(label: 2)
     [{_room_name, details} | _t] = :ets.lookup(@room_db_name, room_pid)
     room_name = details["room_name"]
     match_id = details["match_id"]

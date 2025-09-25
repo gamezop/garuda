@@ -77,10 +77,10 @@ defmodule Garuda.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix, "~> 1.5.3"},
-      {:phoenix_html, "~> 2.14.1 or ~> 2.15"},
+      {:phoenix, "~> 1.6.15"},
+      {:phoenix_html, "~> 2.14.1 or ~> 2.15 or ~> 3.1"},
       {:jason, "~> 1.0"},
-      {:phoenix_live_view, "~> 0.12.0 or ~> 0.14.4 or ~> 0.15.0"},
+      {:phoenix_live_view, "~> 0.18"},
       {:uuid, "~> 1.1.8"},
       {:msgpax, "~> 2.0"},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false},

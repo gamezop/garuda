@@ -12,4 +12,10 @@ defmodule Garuda.MatchMakerChannel do
       {:error, match_resp}
     end
   end
+
+  def terminate(reason, socket) do
+    IO.inspect("leaving matchmaker #{inspect reason}")
+
+    socket
+  end
 end
