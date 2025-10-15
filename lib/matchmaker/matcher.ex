@@ -3,6 +3,7 @@ defmodule Garuda.MatchMaker.Matcher do
 
   # Manages the creation, updation and deletion of match rooms.
   use GenServer
+  require Logger
   ##################
 
   def start_link(opts) do
@@ -64,10 +65,12 @@ defmodule Garuda.MatchMaker.Matcher do
   def handle_call({"remove_player", room_name, player_id}, _from, state) do
     case :ets.lookup(:matcher_table, room_name) do
       [{_room_name, details} | _t] ->
+        Logger.debug("Removing player #{player_id} from room #{room_name}")
         manage_deletion(room_name, details, player_id)
         {:reply, "deleted", state}
 
       _ ->
+        Logger.info("Room not found: #{room_name} while removing player #{player_id}")
         {:reply, "room_not_found", state}
     end
   end
@@ -150,6 +153,7 @@ defmodule Garuda.MatchMaker.Matcher do
 
   defp manage_deletion(room_name, details, player_id) do
     index = Enum.find_index(details["players"], fn id -> id === player_id end)
+    Logger.debug("Player index: #{inspect(index)} in room #{room_name}")
 
     # Deletes the room itslef, if this is the last player leaving.
     with true <- index !== nil,
